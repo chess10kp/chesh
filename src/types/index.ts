@@ -41,6 +41,8 @@ export interface Game {
   whiteClock?: number;
   blackClock?: number;
   pgn?: string;
+  fenHistory?: string[];
+  currentMoveIndex?: number;
 }
 
 export type GameStatus =

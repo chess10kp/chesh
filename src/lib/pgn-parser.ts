@@ -1,6 +1,6 @@
 import { parse } from '@mliebelt/pgn-parser';
 import { Game, BroadcastPlayer } from '../types/index.js';
-import { generateFENFromMoves } from './board-tracker.js';
+import { BoardTracker } from './board-tracker.js';
 
 export function parsePGN(pgn: string): Game[] {
   console.log('[pgn-parser] Parsing PGN, length:', pgn.length);
@@ -47,10 +47,20 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }): Game | null {
 
   let fen: string | undefined;
   let status: 'started' | 'playing' | 'aborted' | 'mate' | 'draw' | 'resign' | 'stalemate' | 'timeout' | 'outoftime' = 'started';
+  const fenHistory: string[] = [];
 
   try {
     if (moves && moves.length > 0) {
-      fen = generateFENFromMoves(moves);
+      const tracker = new BoardTracker();
+      tracker.resetToStartingPosition();
+      fenHistory.push(tracker.toFEN());
+
+      for (const move of moves) {
+        tracker.applyMove(move, move.turn);
+        fenHistory.push(tracker.toFEN());
+      }
+
+      fen = fenHistory[fenHistory.length - 1];
 
       const lastMove = moves[moves.length - 1];
       if (lastMove?.notation?.check) {
@@ -81,6 +91,8 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }): Game | null {
     fen,
     status,
     pgn: pgnText,
+    fenHistory,
+    currentMoveIndex: fenHistory.length - 1,
   };
 }
 

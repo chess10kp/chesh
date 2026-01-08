@@ -125,9 +125,9 @@ export default function App() {
           onSelectGame={handleSelectGame}
           onBack={handleBackToRounds}
         />
-      ) : (
+      ) : selectedGame ? (
         <GameView game={selectedGame} onBack={handleBackToRounds} />
-      )}
+      ) : null}
     </Box>
   );
 }
