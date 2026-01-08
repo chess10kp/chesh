@@ -5,7 +5,9 @@ interface MoveHistoryProps {
   currentMoveIndex?: number;
 }
 
-export default function MoveHistory({ moves, currentMoveIndex }: MoveHistoryProps) {
+const MAX_DISPLAY_MOVES = 12;
+
+export default function MoveHistory({ moves, currentMoveIndex = 0 }: MoveHistoryProps) {
   if (!moves) {
     return (
       <Box flexDirection="column" borderStyle="single" paddingX={1}>
@@ -17,37 +19,67 @@ export default function MoveHistory({ moves, currentMoveIndex }: MoveHistoryProp
 
   const movePairs = parsePGN(moves);
 
-  return (
-    <Box flexDirection="column" borderStyle="single" paddingX={1}>
-      <Text bold color="gray">Move History:</Text>
-      <Box flexDirection="column">
-        {movePairs.map((pair, index) => {
-          const whiteMoveNum = index * 2 + 1;
-          const blackMoveNum = index * 2 + 2;
-          const isWhiteActive = currentMoveIndex === whiteMoveNum;
-          const isBlackActive = currentMoveIndex === blackMoveNum;
+  const displayPairs = getDisplayPairs(movePairs, currentMoveIndex);
 
-          return (
-            <Box key={index} flexDirection="row" gap={2}>
-              <Text color="white">
-                {index + 1}.{' '}
-                <Text backgroundColor={isWhiteActive ? 'yellow' : undefined}>
-                  {pair.white || '...'}
-                </Text>
-              </Text>
-              {pair.black && (
-                <Text color="black">
-                  <Text backgroundColor={isBlackActive ? 'yellow' : undefined}>
-                    {pair.black}
+  return (
+      <Box flexDirection="column" borderStyle="single" paddingX={1} height={16}>
+        <Text bold color="gray">Move History:</Text>
+        <Box flexDirection="column">
+          {displayPairs.map((pair) => {
+            const actualIndex = pair.actualIndex;
+            const whiteMoveNum = actualIndex * 2 + 1;
+            const blackMoveNum = actualIndex * 2 + 2;
+            const isWhiteActive = currentMoveIndex === whiteMoveNum;
+            const isBlackActive = currentMoveIndex === blackMoveNum;
+
+            return (
+              <Box key={actualIndex} flexDirection="row" gap={2}>
+                <Text color="white">
+                  {actualIndex + 1}.{' '}
+                  <Text backgroundColor={isWhiteActive ? 'yellow' : undefined}>
+                    {pair.white || '...'}
                   </Text>
                 </Text>
-              )}
-            </Box>
-          );
-        })}
+                {pair.black && (
+                  <Text color="black">
+                    <Text backgroundColor={isBlackActive ? 'yellow' : undefined}>
+                      {pair.black}
+                    </Text>
+                  </Text>
+                )}
+              </Box>
+            );
+          })}
+        </Box>
+        {movePairs.length > MAX_DISPLAY_MOVES && (
+          <Text color="dimColor">... and {movePairs.length - MAX_DISPLAY_MOVES} more moves</Text>
+        )}
       </Box>
-    </Box>
   );
+}
+
+function getDisplayPairs(
+  movePairs: Array<{ white?: string; black?: string }>,
+  currentMoveIndex: number
+): Array<{ white?: string; black?: string; actualIndex: number }> {
+  const pairsWithIndex = movePairs.map((pair, index) => ({ ...pair, actualIndex: index }));
+
+  if (movePairs.length <= MAX_DISPLAY_MOVES) {
+    return pairsWithIndex;
+  }
+
+  const currentPairIndex = Math.floor((currentMoveIndex - 1) / 2);
+  const halfWindow = Math.floor(MAX_DISPLAY_MOVES / 2);
+
+  let startIndex = Math.max(0, currentPairIndex - halfWindow);
+  let endIndex = startIndex + MAX_DISPLAY_MOVES;
+
+  if (endIndex > movePairs.length) {
+    endIndex = movePairs.length;
+    startIndex = Math.max(0, endIndex - MAX_DISPLAY_MOVES);
+  }
+
+  return pairsWithIndex.slice(startIndex, endIndex);
 }
 
 function parsePGN(moves: string): Array<{ white?: string; black?: string }> {

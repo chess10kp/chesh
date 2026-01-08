@@ -83,6 +83,7 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }): Game | null {
   }
 
   const pgnText = formatTagsAsPGN(tags) + '\n\n' + formatMovesAsPGN(moves);
+  const moveNotations = formatMovesAsPGN(moves);
 
   return {
     players,
@@ -91,6 +92,7 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }): Game | null {
     pgn: pgnText,
     fenHistory,
     currentMoveIndex: fenHistory.length - 1,
+    moves: moveNotations,
   };
 }
 
@@ -106,15 +108,14 @@ function formatTagsAsPGN(tags: any): string {
 function formatMovesAsPGN(moves: any[]): string {
   if (!moves || moves.length === 0) return '';
 
-  let pgn = '';
+  const notations: string[] = [];
   for (const move of moves) {
-    if (move.moveNumber && move.turn === 'w') {
-      pgn += move.moveNumber + '. ';
+    if (move.notation?.notation) {
+      notations.push(move.notation.notation);
     }
-    pgn += move.notation.notation + ' ';
   }
 
-  return pgn.trim();
+  return notations.join(' ');
 }
 
 export function parseSinglePGN(pgn: string): Game | null {
