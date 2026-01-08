@@ -24,6 +24,7 @@ export default function GameView({ game, onBack }: GameViewProps) {
 
   const canGoNext = game.fenHistory ? currentMoveIndex < game.fenHistory.length - 1 : false;
   const canGoPrevious = currentMoveIndex > 0;
+  const totalMoves = game.fenHistory ? game.fenHistory.length - 1 : 0;
 
   useInput((input, key) => {
     if (input === 'q') {
@@ -44,6 +45,9 @@ export default function GameView({ game, onBack }: GameViewProps) {
       <Box flexDirection="column" flexGrow={1}>
         <Box borderStyle="single" paddingX={1} marginBottom={1}>
           <Text bold color={defaultTheme.accent}>{game.name}</Text>
+          {totalMoves > 0 && (
+            <Text color="gray"> - Move {currentMoveIndex} of {totalMoves}</Text>
+          )}
         </Box>
 
         <Box flexDirection="row">
@@ -70,7 +74,7 @@ export default function GameView({ game, onBack }: GameViewProps) {
             )}
 
             <Box marginTop={1}>
-              <MoveHistory moves={game.moves} />
+              <MoveHistory moves={game.moves} currentMoveIndex={currentMoveIndex} />
             </Box>
           </Box>
         </Box>

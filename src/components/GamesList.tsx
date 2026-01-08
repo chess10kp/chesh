@@ -19,8 +19,6 @@ export default function GamesList({
 }: GamesListProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  console.log('[GamesList] Render called. Games count:', games.length, 'Round:', roundName);
-
   useInput((input, key) => {
     if (key.upArrow || input === 'k') {
       setSelectedIndex(i => Math.max(0, i - 1));

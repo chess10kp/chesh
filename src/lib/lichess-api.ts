@@ -60,13 +60,10 @@ export async function streamRoundPGN(
   }
 
   const url = `${LICHESS_API_URL}/stream/broadcast/round/${roundId}.pgn`;
-  console.log('[lichess-api] Fetching PGN from:', url, 'with timeout:', timeoutMs + 'ms');
 
   const response = await fetch(url, {
     headers,
   });
-
-  console.log('[lichess-api] Response status:', response.status, response.statusText);
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -97,7 +94,6 @@ export async function streamRoundPGN(
           const { done, value } = await reader.read();
 
           if (done) {
-            console.log('[lichess-api] Stream finished, total bytes:', totalBytes);
             break;
           }
 
@@ -119,11 +115,8 @@ export async function streamRoundPGN(
       })(),
       timeoutPromise
     ]);
-
-    console.log('[lichess-api] Stream completed, total bytes:', totalBytes);
   } catch (err: any) {
     if (err.message === 'Stream timeout') {
-      console.log('[lichess-api] Stream timeout reached, stopping after', totalBytes, 'bytes');
       if (buffer.trim()) {
         onUpdate(buffer);
       }

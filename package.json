@@ -19,6 +19,7 @@
 	"dependencies": {
 		"@lichess-org/types": "latest",
 		"@mliebelt/pgn-parser": "^1.4.19",
+		"chess.js": "^1.4.0",
 		"ink": "^6.6.0",
 		"react": "^19.2.3",
 		"react-devtools-core": "^7.0.1"
