@@ -41,7 +41,12 @@ export default function ChessBoard({ fen, lastMove }: ChessBoardProps) {
             const isLastMove = lastMove && (lastMove.from === square.position || lastMove.to === square.position);
 
             const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
-            const symbol = square.piece ? getPieceSymbol(square.piece.color, square.piece.type, pieceSize) : ' ';
+            let symbol: string;
+            if (square.piece) {
+              symbol = getPieceSymbol(square.piece.color, square.piece.type, pieceSize);
+            } else {
+              symbol = pieceSize === 'compact' ? '\n       \n        ' : ' ';
+            }
 
             return (
               <Box

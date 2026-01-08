@@ -19,6 +19,8 @@ export default function GamesList({
 }: GamesListProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  console.log('[GamesList] Render called. Games count:', games.length, 'Round:', roundName);
+
   useInput((input, key) => {
     if (key.upArrow || input === 'k') {
       setSelectedIndex(i => Math.max(0, i - 1));
@@ -28,7 +30,10 @@ export default function GamesList({
       if (games.length === 0) {
         return;
       }
-      onSelectGame(games[selectedIndex]);
+      const selectedGame = games[selectedIndex];
+      if (selectedGame) {
+        onSelectGame(selectedGame);
+      }
     } else if (key.escape || input === 'q') {
       onBack();
     }
@@ -40,12 +45,15 @@ export default function GamesList({
         <Text bold color={defaultTheme.accent}>
           {roundName}
         </Text>
-        <Text marginBottom={1} color="gray">
-          Select a game ({games.length} available):
-        </Text>
+        <Box marginBottom={1}>
+          <Text color="gray">
+            Select a game ({games.length} available):
+          </Text>
+        </Box>
         {games.length === 0 ? (
           <Box padding={1}>
-            <Text color="gray">No games available</Text>
+            <Text color="yellow">No games found in PGN</Text>
+            <Text color="gray">Press q to return to rounds</Text>
           </Box>
         ) : (
           games.map((game, index) => {
@@ -54,7 +62,7 @@ export default function GamesList({
             const gameTitle = `${white?.name || '?'} vs ${black?.name || '?'}`;
 
             return (
-              <Box key={index}>
+              <Box key={game.id || index}>
                 <Box
                   backgroundColor={index === selectedIndex ? defaultTheme.highlight : undefined}
                   paddingX={1}
@@ -63,7 +71,10 @@ export default function GamesList({
                     {index === selectedIndex ? '▶ ' : '  '}
                     {gameTitle}
                     {game.status && (
-                      <Text color="gray"> {game.status}</Text>
+                      <Text color="gray"> ({game.status})</Text>
+                    )}
+                    {game.fen && (
+                      <Text color="gray" dimColor> ✓</Text>
                     )}
                   </Text>
                 </Box>

@@ -39,38 +39,63 @@ export default function App() {
   };
 
   const handleSelectRound = async (round: any) => {
+    console.log('[App] handleSelectRound START');
+    console.log('[App] Setting loadingGames = true');
     setLoadingGames(true);
     setRoundName(round.name);
-
     console.log('[App] Selecting round:', { id: round.id, name: round.name });
 
     try {
       const allPgnData: string[] = [];
+      console.log('[App] Calling streamRoundPGN with 10s timeout...');
+
       await streamRoundPGN(round.id, (pgn: string) => {
-        console.log('[App] Received PGN chunk:', pgn.substring(0) + '...');
         allPgnData.push(pgn);
-      });
+      }, undefined, 4000);
+
+      console.log('[App] Stream complete. Total chunks:', allPgnData.length);
 
       const fullPgn = allPgnData.join('\n\n');
-      console.log('[App] Total PGN data received:', fullPgn.length, 'characters');
+      console.log('[App] Full PGN length:', fullPgn.length, 'characters');
 
+      if (fullPgn.length === 0) {
+        console.error('[App] ERROR: Empty PGN received!');
+        setGames([]);
+        setLoadingGames(false);
+        return;
+      }
+
+      console.log('[App] Calling parsePGN...');
+      console.log(fullPgn);
       const parsedGames = parsePGN(fullPgn);
-      console.log('[App] Parsed games:', parsedGames.length);
+      console.log('[App] Parsed', parsedGames.length, 'games');
 
       if (parsedGames.length > 0) {
-        console.log('[App] First game players:', parsedGames[0].players.map(p => p.name));
+        const firstGame = parsedGames[0];
+        if (firstGame) {
+          console.log('[App] First game players:', firstGame.players.map(p => p.name));
+        }
+        console.log('[App] Setting games state...');
         setGames(parsedGames);
+        console.log('[App] Setting viewState to games-list...');
         setViewState('games-list');
       } else {
-        console.log('[App] No games parsed from PGN');
+        console.error('[App] ERROR: No games parsed!');
+        console.error('[App] PGN preview:', fullPgn.substring(0, 300));
+        setGames([]);
       }
     } catch (err: any) {
-      console.error('[App] Error streaming PGN:', err.message);
-      console.error('[App] Error stack:', err.stack);
+      console.error('[App] ERROR in handleSelectRound:', err.message);
+      console.error('[App] Stack:', err.stack);
+      setGames([]);
     } finally {
+      console.log('[App] Finally: Setting loadingGames = false');
       setLoadingGames(false);
     }
+    console.log('[App] handleSelectRound END');
   };
+
+  console.log('[App] Render - viewState:', viewState, 'games:', games.length, 'loadingGames:', loadingGames);
 
   return (
     <Box flexDirection="column">
@@ -91,6 +116,7 @@ export default function App() {
           broadcastName={selectedBroadcast.tour.name}
           onSelectRound={handleSelectRound}
           onBack={handleBackToList}
+          loadingGames={loadingGames}
         />
       ) : viewState === 'games-list' ? (
         <GamesList

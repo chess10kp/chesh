@@ -11,6 +11,7 @@ interface RoundsListProps {
   onSelectRound: (round: BroadcastRound) => void;
   onBack: () => void;
   token?: string;
+  loadingGames?: boolean;
 }
 
 export default function RoundsList({
@@ -19,6 +20,7 @@ export default function RoundsList({
   onSelectRound,
   onBack,
   token,
+  loadingGames,
 }: RoundsListProps) {
   const [rounds, setRounds] = useState<BroadcastRound[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,12 +47,14 @@ export default function RoundsList({
   }, [rounds]);
 
   useInput((input, key) => {
+    if (loadingGames) return;
+
     if (key.upArrow || input === 'k') {
       setSelectedIndex(i => Math.max(0, i - 1));
     } else if (key.downArrow || input === 'j') {
       setSelectedIndex(i => Math.min(rounds.length - 1, i + 1));
     } else if (key.return) {
-      if (rounds.length === 0) {
+      if (rounds.length === 0 || loadingGames) {
         return;
       }
       const selected = rounds[selectedIndex];
@@ -74,10 +78,14 @@ export default function RoundsList({
     }
   });
 
-  if (loading) {
+  if (loading || loadingGames) {
     return (
-      <Box justifyContent="center" padding={2}>
-        <Text color="yellow">Loading rounds...</Text>
+      <Box flexDirection="column" height="100%" padding={1}>
+        <Box flexDirection="column" flexGrow={1} justifyContent="center" alignItems="center">
+          <Text color="yellow" bold>
+            {loadingGames ? 'Loading games from PGN...' : 'Loading rounds...'}
+          </Text>
+        </Box>
       </Box>
     );
   }
@@ -93,12 +101,14 @@ export default function RoundsList({
   return (
     <Box flexDirection="column" height="100%" padding={1}>
       <Box flexDirection="column" flexGrow={1}>
-        <Text bold marginBottom={1} color={defaultTheme.accent}>
+        <Text bold color={defaultTheme.accent}>
           {broadcastName}
         </Text>
-        <Text marginBottom={1} color="gray">
-          Select a round:
-        </Text>
+        <Box marginBottom={1}>
+          <Text color="gray">
+            Select a round:
+          </Text>
+        </Box>
         {rounds.length === 0 ? (
           <Box padding={1}>
             <Text color="gray">No rounds available</Text>

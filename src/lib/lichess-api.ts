@@ -51,7 +51,8 @@ export async function fetchBroadcastRounds(
 export async function streamRoundPGN(
   roundId: string,
   onUpdate: (pgn: string) => void,
-  token?: string
+  token?: string,
+  timeoutMs: number = 5000
 ): Promise<void> {
   const headers: HeadersInit = {};
   if (token) {
@@ -59,7 +60,7 @@ export async function streamRoundPGN(
   }
 
   const url = `${LICHESS_API_URL}/stream/broadcast/round/${roundId}.pgn`;
-  console.log('[lichess-api] Fetching PGN from:', url);
+  console.log('[lichess-api] Fetching PGN from:', url, 'with timeout:', timeoutMs + 'ms');
 
   const response = await fetch(url, {
     headers,
@@ -81,32 +82,58 @@ export async function streamRoundPGN(
   const decoder = new TextDecoder();
   let buffer = '';
   let totalBytes = 0;
+  let timeoutId: NodeJS.Timeout | null = null;
 
   try {
-    while (true) {
-      const { done, value } = await reader.read();
+    const timeoutPromise = new Promise<void>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(new Error('Stream timeout'));
+      }, timeoutMs);
+    });
 
-      if (done) {
-        console.log('[lichess-api] Stream finished, total bytes:', totalBytes);
-        break;
-      }
+    await Promise.race([
+      (async () => {
+        while (true) {
+          const { done, value } = await reader.read();
 
-      totalBytes += value.length;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+          if (done) {
+            console.log('[lichess-api] Stream finished, total bytes:', totalBytes);
+            break;
+          }
 
-      for (const line of lines) {
-        if (line.trim()) {
-          onUpdate(line);
+          totalBytes += value.length;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.trim()) {
+              onUpdate(line);
+            }
+          }
         }
-      }
-    }
 
-    if (buffer.trim()) {
-      onUpdate(buffer);
+        if (buffer.trim()) {
+          onUpdate(buffer);
+        }
+      })(),
+      timeoutPromise
+    ]);
+
+    console.log('[lichess-api] Stream completed, total bytes:', totalBytes);
+  } catch (err: any) {
+    if (err.message === 'Stream timeout') {
+      console.log('[lichess-api] Stream timeout reached, stopping after', totalBytes, 'bytes');
+      if (buffer.trim()) {
+        onUpdate(buffer);
+      }
+    } else {
+      throw err;
     }
   } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
     reader.releaseLock();
   }
 }
