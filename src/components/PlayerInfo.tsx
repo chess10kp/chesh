@@ -13,7 +13,7 @@ function PlayerInfo({ player, isWhite, isActive }: PlayerInfoProps) {
   return (
     <Box flexDirection="column" marginBottom={1}>
       <Box flexDirection="row">
-        <Text color={isWhite ? defaultTheme.pieceWhite : defaultTheme.pieceBlack}>
+        <Text color={defaultTheme.pieceWhite}>
           {isWhite ? '⬜' : '⬛'} {player.title || ''} {player.name}
         </Text>
         <Text color="gray"> ({player.rating})</Text>

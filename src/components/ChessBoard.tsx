@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { Box, Text } from 'ink';
 import { getPieceSymbol, renderPixelArtPiece, PieceSize } from '../lib/pieces.js';
 import { rgbToInkColor, defaultTheme } from '../lib/themes.js';
@@ -79,7 +79,7 @@ function PixelArtBoard({ squares, lastMove }: PixelArtBoardProps) {
   );
 }
 
-export default function ChessBoard({ fen, lastMove }: ChessBoardProps) {
+function ChessBoard({ fen, lastMove }: ChessBoardProps) {
   const terminalHeight = process.stdout.rows || 24;
   const terminalWidth = process.stdout.columns || 80;
 
@@ -111,7 +111,7 @@ export default function ChessBoard({ fen, lastMove }: ChessBoardProps) {
   }, [terminalHeight, terminalWidth]);
 
   const effectiveFen = fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-  const squares = parseFenToSquares(effectiveFen);
+  const squares = useMemo(() => parseFenToSquares(effectiveFen), [effectiveFen]);
 
   if (pieceSize === 'pixel-art') {
     return <PixelArtBoard squares={squares} lastMove={lastMove} />;
@@ -212,7 +212,4 @@ function parsePieceChar(char: string) {
   return { color, type };
 }
 
-interface Square {
-  position: string;
-  piece: { color: 'white' | 'black'; type: 'king' | 'queen' | 'rook' | 'bishop' | 'knight' | 'pawn' } | null;
-}
+export default memo(ChessBoard);

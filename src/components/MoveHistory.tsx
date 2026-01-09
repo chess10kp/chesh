@@ -13,7 +13,6 @@ export default function MoveHistory({ moves, currentMoveIndex = 0 }: MoveHistory
   }
 
   const movePairs = parsePGN(moves);
-  const totalMoves = moves.split(' ').filter(m => m).length;
 
   const displayPairs = getDisplayPairs(movePairs, currentMoveIndex);
 
@@ -45,9 +44,6 @@ export default function MoveHistory({ moves, currentMoveIndex = 0 }: MoveHistory
               </Box>
             );
           })}
-        </Box>
-        <Box marginTop={1}>
-          <Text color="gray" dimColor>Total: {totalMoves} moves</Text>
         </Box>
       </Box>
   );
