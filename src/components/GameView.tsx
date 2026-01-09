@@ -1,27 +1,14 @@
-import { useState, useEffect, memo } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { useState, useEffect } from 'react';
+import { Box, useInput } from 'ink';
 import ChessBoard from './ChessBoard.js';
 import PlayerInfo from './PlayerInfo.js';
 import MoveHistory from './MoveHistory.js';
 import GameListSidebar from './GameListSidebar.js';
+import StockfishEval from './StockfishEval.js';
 import { Game } from '../types/index.js';
-import { defaultTheme } from '../lib/themes.js';
 import HelpBar from './HelpBar.js';
 import ScrollView from './ScrollView.js';
-
-interface GameHeaderProps {
-  name: string | undefined;
-}
-
-function GameHeader({ name }: GameHeaderProps) {
-  return (
-    <Box paddingX={1} marginBottom={1}>
-      <Text bold color={defaultTheme.accent}>{name || 'Chess Game'}</Text>
-    </Box>
-  );
-}
-
-const MemoizedGameHeader = memo(GameHeader);
+import { useStockfish } from '../hooks/useStockfish.js';
 
 type FocusArea = 'board' | 'sidebar';
 
@@ -53,6 +40,8 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
   const blackPlayer = game.players[1];
 
   const currentFEN = game.fenHistory?.[currentMoveIndex] ?? game.fen ?? undefined;
+
+  const stockfishState = useStockfish(currentFEN, { depth: 20, multiPv: 3 });
 
   const canGoNext = game.fenHistory ? currentMoveIndex < game.fenHistory.length - 1 : false;
   const canGoPrevious = currentMoveIndex > 0;
@@ -87,7 +76,6 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
   return (
     <Box flexDirection="column" height="100%" padding={1}>
       <Box flexDirection="column" flexGrow={1}>
-        <MemoizedGameHeader name={game.name} />
 
         <Box flexDirection="row">
           <GameListSidebar
@@ -130,6 +118,8 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
             <Box marginTop={1} flexGrow={1}>
               <MoveHistory moves={game.moves} currentMoveIndex={currentMoveIndex} />
             </Box>
+
+            <StockfishEval state={stockfishState} />
           </Box>
         </Box>
       </Box>
