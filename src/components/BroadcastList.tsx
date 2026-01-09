@@ -8,12 +8,12 @@ import ScrollView, { truncateText } from './ScrollView.js';
 
 interface BroadcastListProps {
   onSelectBroadcast: (broadcast: Broadcast) => void;
-  loadingGames?: boolean;
+  setLoading?: (loading: boolean) => void;
 }
 
-export default function BroadcastList({ onSelectBroadcast, loadingGames }: BroadcastListProps) {
+export default function BroadcastList({ onSelectBroadcast, setLoading }: BroadcastListProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const { broadcasts, loading, error, refresh } = useBroadcasts();
+  const { broadcasts, error, refresh } = useBroadcasts();
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -31,22 +31,15 @@ export default function BroadcastList({ onSelectBroadcast, loadingGames }: Broad
 
       const selected = broadcasts[selectedIndex];
       onSelectBroadcast(selected);
-    } else if (key.escape || key.backspace) {
+    } else if (key.escape) {
       process.exit(0);
     } else if (input === 'r') {
       refresh();
+      if (setLoading) setLoading(true);
     } else if (input === 'q') {
       process.exit(0);
     }
   });
-
-  if (loading || loadingGames) {
-    return (
-      <Box justifyContent="center" padding={2}>
-        <Text color="yellow">{loading ? 'Loading broadcasts...' : 'Loading games...'}</Text>
-      </Box>
-    );
-  }
 
   if (error) {
     return (
@@ -83,7 +76,7 @@ export default function BroadcastList({ onSelectBroadcast, loadingGames }: Broad
           ))}
         </ScrollView>
       </Box>
-      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Broadcast  [r] Refresh  [q/Esc/Backspace] Quit" />
+      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Broadcast  [r] Refresh  [q/Esc] Quit" />
     </Box>
   );
 }

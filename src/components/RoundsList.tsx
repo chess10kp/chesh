@@ -11,7 +11,6 @@ interface RoundsListProps {
   onSelectRound: (round: BroadcastRound) => void;
   onBack: () => void;
   token?: string;
-  loadingGames?: boolean;
 }
 
 export default function RoundsList({
@@ -20,10 +19,9 @@ export default function RoundsList({
   onSelectRound,
   onBack,
   token,
-  loadingGames,
 }: RoundsListProps) {
   const [rounds, setRounds] = useState<BroadcastRound[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -47,21 +45,19 @@ export default function RoundsList({
   }, [rounds]);
 
   useInput((input, key) => {
-    if (loadingGames) return;
-
     if (key.upArrow || input === 'k') {
       setSelectedIndex(i => Math.max(0, i - 1));
     } else if (key.downArrow || input === 'j') {
       setSelectedIndex(i => Math.min(rounds.length - 1, i + 1));
     } else if (key.return) {
-      if (rounds.length === 0 || loadingGames) {
+      if (rounds.length === 0) {
         return;
       }
       const selected = rounds[selectedIndex];
       if (selected) {
         onSelectRound(selected);
       }
-    } else if (key.escape || key.backspace || input === 'q') {
+    } else if (key.escape || input === 'q') {
       onBack();
     } else if (input === 'r') {
       setLoading(true);
@@ -77,18 +73,6 @@ export default function RoundsList({
         });
     }
   });
-
-  if (loading || loadingGames) {
-    return (
-      <Box flexDirection="column" height="100%" padding={1}>
-        <Box flexDirection="column" flexGrow={1} justifyContent="center" alignItems="center">
-          <Text color="yellow" bold>
-            {loadingGames ? 'Loading games from PGN...' : 'Loading rounds...'}
-          </Text>
-        </Box>
-      </Box>
-    );
-  }
 
   if (error) {
     return (
@@ -134,7 +118,7 @@ export default function RoundsList({
           ))
         )}
       </Box>
-      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Round  [r] Refresh  [q/Esc/Backspace] Back" />
+      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Round  [r] Refresh  [q/Esc] Back" />
     </Box>
   );
 }

@@ -58,7 +58,7 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
   const canGoPrevious = currentMoveIndex > 0;
 
   useInput((input, key) => {
-    if (input === 'q' || key.backspace) {
+    if (input === 'q') {
       onBack();
     } else if (input === 'n' || (key.rightArrow)) {
       if (focus === 'board' && canGoNext) {
@@ -136,8 +136,8 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
 
       <HelpBar shortcuts={
         focus === 'board'
-          ? "[n/→] Next move | [p/←] Prev move | [Tab] Sidebar | [q/Backspace] Return"
-          : "[↑/k] Up | [↓/j] Down | [Enter] Select | [Tab] Board | [q/Backspace] Return"
+          ? "[n/→] Next move | [p/←] Prev move | [Tab] Sidebar | [q] Return"
+          : "[↑/k] Up | [↓/j] Down | [Enter] Select | [Tab] Board | [q] Return"
       } />
     </Box>
   );

@@ -33,7 +33,7 @@ export default function GamesList({
       if (selectedGame) {
         onSelectGame(selectedGame);
       }
-    } else if (key.escape || key.backspace || input === 'q') {
+    } else if (key.escape || input === 'q') {
       onBack();
     }
   });
@@ -91,7 +91,7 @@ export default function GamesList({
           </ScrollView>
         )}
       </Box>
-      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Game  [q/Esc/Backspace] Back" />
+      <HelpBar shortcuts="[↑/k] Up  [↓/j] Down  [Enter] Select Game  [q/Esc] Back" />
     </Box>
   );
 }

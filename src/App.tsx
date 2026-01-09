@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Box, Text } from 'ink';
+import { Box } from 'ink';
 import BroadcastList from './components/BroadcastList.js';
 import RoundsList from './components/RoundsList.js';
 import GamesList from './components/GamesList.js';
 import GameView from './components/GameView.js';
+import Header from './components/Header.js';
 import { ViewState, Broadcast, Game } from './types/index.js';
 import { streamRoundPGN } from './lib/lichess-api.js';
 import { parsePGN } from './lib/pgn-parser.js';
@@ -11,6 +12,7 @@ import { parsePGN } from './lib/pgn-parser.js';
 export default function App() {
   const [viewState, setViewState] = useState<ViewState>('broadcast-list');
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [loading, setLoading] = useState(false);
   const [loadingGames, setLoadingGames] = useState(false);
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
   const [games, setGames] = useState<Game[]>([]);
@@ -96,16 +98,12 @@ export default function App() {
 
   return (
     <Box flexDirection="column">
-      <Box borderStyle="single" borderColor="cyan" paddingX={1}>
-        <Text bold color="cyan">
-          Check.sh
-        </Text>
-      </Box>
+      <Header loading={loading} loadingGames={loadingGames} />
 
       {viewState === 'broadcast-list' ? (
         <BroadcastList
           onSelectBroadcast={handleSelectBroadcast}
-          loadingGames={loadingGames}
+          setLoading={setLoading}
         />
       ) : viewState === 'rounds-list' && selectedBroadcast ? (
         <RoundsList
@@ -113,7 +111,6 @@ export default function App() {
           broadcastName={selectedBroadcast.tour.name}
           onSelectRound={handleSelectRound}
           onBack={handleBackToList}
-          loadingGames={loadingGames}
         />
       ) : viewState === 'games-list' ? (
         <GamesList
