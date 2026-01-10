@@ -19,6 +19,10 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
   const processRef = useRef<ChildProcess | null>(null);
   const currentFenRef = useRef<string | undefined>(undefined);
 
+  const setEvaluation = useCallback((evaluation: StockfishEvaluation) => {
+    setState(prev => ({ ...prev, evaluation }));
+  }, []);
+
   const parseInfoLine = useCallback((line: string): Partial<StockfishEvaluation> | null => {
     if (!line.startsWith('info') || !line.includes('score')) {
       return null;
@@ -105,18 +109,15 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
           } else if (line.startsWith('info')) {
             const parsed = parseInfoLine(line);
             if (parsed && parsed.depth && parsed.pv && parsed.pv.length > 0) {
-              setState(prev => ({
-                ...prev,
-                evaluation: {
-                  score: parsed.score ?? 0,
-                  isMate: parsed.isMate ?? false,
-                  mateIn: parsed.mateIn,
-                  depth: parsed.depth ?? 0,
-                  bestMove: parsed.bestMove ?? '',
-                  pv: parsed.pv ?? [],
-                  isAnalyzing: true,
-                },
-              }));
+              setEvaluation({
+                score: parsed.score ?? 0,
+                isMate: parsed.isMate ?? false,
+                mateIn: parsed.mateIn,
+                depth: parsed.depth ?? 0,
+                bestMove: parsed.bestMove ?? '',
+                pv: parsed.pv ?? [],
+                isAnalyzing: true,
+              });
             }
           } else if (line.startsWith('bestmove')) {
             const moveMatch = line.match(/bestmove (\S+)/);
@@ -157,7 +158,7 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
       }
       processRef.current = null;
     };
-  }, [parseInfoLine]);
+  }, [parseInfoLine, setEvaluation]);
 
   useEffect(() => {
     if (state.isReady && fen && fen !== currentFenRef.current) {

@@ -2,6 +2,7 @@ import { useMemo, memo } from 'react';
 import { Box, Text } from 'ink';
 import { getPieceSymbol, renderPixelArtPiece, PieceSize } from '../lib/pieces.js';
 import { rgbToInkColor, defaultTheme } from '../lib/themes.js';
+import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
 const CELL_WIDTH = 8;
 const PIXEL_ART_CELL_WIDTH = 18;
@@ -21,7 +22,7 @@ interface PixelArtBoardProps {
   lastMove?: { from: string; to: string };
 }
 
-function PixelArtBoard({ squares, lastMove }: PixelArtBoardProps) {
+const PixelArtBoard = memo(function PixelArtBoard({ squares, lastMove }: PixelArtBoardProps) {
   const PIECE_HEIGHT = 8;
 
   return (
@@ -77,11 +78,10 @@ function PixelArtBoard({ squares, lastMove }: PixelArtBoardProps) {
       </Box>
     </Box>
   );
-}
+});
 
 function ChessBoard({ fen, lastMove }: ChessBoardProps) {
-  const terminalHeight = process.stdout.rows || 24;
-  const terminalWidth = process.stdout.columns || 80;
+  const { width: terminalWidth, height: terminalHeight } = useTerminalSize(150);
 
   const pieceSize = useMemo((): PieceSize => {
     // Medium (compact) board minimum: 75 columns, 27 rows

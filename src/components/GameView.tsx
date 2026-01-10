@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Box, useInput } from 'ink';
 import ChessBoard from './ChessBoard.js';
 import PlayerInfo from './PlayerInfo.js';
@@ -7,8 +7,6 @@ import GameListSidebar from './GameListSidebar.js';
 import StockfishEval from './StockfishEval.js';
 import { Game } from '../types/index.js';
 import HelpBar from './HelpBar.js';
-import ScrollView from './ScrollView.js';
-import { useStockfish } from '../hooks/useStockfish.js';
 
 type FocusArea = 'board' | 'sidebar';
 
@@ -36,15 +34,26 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
     setCurrentMoveIndex(game.currentMoveIndex ?? 0);
   }, [game.id]);
 
-  const whitePlayer = game.players[0];
-  const blackPlayer = game.players[1];
+  const whitePlayer = useMemo(() => game.players[0], [game.players]);
+  const blackPlayer = useMemo(() => game.players[1], [game.players]);
 
-  const currentFEN = game.fenHistory?.[currentMoveIndex] ?? game.fen ?? undefined;
+  const currentFEN = useMemo(
+    () => game.fenHistory?.[currentMoveIndex] ?? game.fen ?? undefined,
+    [game.fenHistory, game.fen, currentMoveIndex]
+  );
 
-  const stockfishState = useStockfish(currentFEN, { depth: 20, multiPv: 3 });
-
-  const canGoNext = game.fenHistory ? currentMoveIndex < game.fenHistory.length - 1 : false;
+  const canGoNext = useMemo(
+    () => game.fenHistory ? currentMoveIndex < game.fenHistory.length - 1 : false,
+    [game.fenHistory, currentMoveIndex]
+  );
   const canGoPrevious = currentMoveIndex > 0;
+
+  const lastMoveFrom = game.lastMove?.substring(0, 2);
+  const lastMoveTo = game.lastMove?.substring(2, 4);
+  const lastMove = useMemo(
+    () => lastMoveFrom && lastMoveTo ? { from: lastMoveFrom, to: lastMoveTo } : undefined,
+    [lastMoveFrom, lastMoveTo]
+  );
 
   useInput((input, key) => {
     if (input === 'q') {
@@ -93,12 +102,12 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
             marginX={1}
           >
             {currentFEN && (
-              <ChessBoard fen={currentFEN} lastMove={game.lastMove ? { from: game.lastMove.substring(0, 2), to: game.lastMove.substring(2, 4) } : undefined} />
+              <ChessBoard fen={currentFEN} lastMove={lastMove} />
             )}
           </Box>
 
           <Box flexDirection="column" width={45}>
-            <ScrollView height={10}>
+            <Box flexDirection='column' flexGrow={1} marginTop={1}>
               {whitePlayer && (
                 <PlayerInfo
                   player={whitePlayer}
@@ -113,13 +122,13 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
                   isActive={game.status === 'playing'}
                 />
               )}
-            </ScrollView>
+            </Box>
 
             <Box marginTop={1} flexGrow={1}>
               <MoveHistory moves={game.moves} currentMoveIndex={currentMoveIndex} />
             </Box>
 
-            <StockfishEval state={stockfishState} />
+            <StockfishEval fen={currentFEN} />
           </Box>
         </Box>
       </Box>

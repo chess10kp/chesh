@@ -1,10 +1,10 @@
 import { memo } from 'react';
 import { Box, Text } from 'ink';
-import { StockfishState } from '../types/stockfish.js';
+import { useStockfish } from '../hooks/useStockfish.js';
 import { defaultTheme } from '../lib/themes.js';
 
 interface StockfishEvalProps {
-  state: StockfishState;
+  fen: string | undefined;
 }
 
 function formatScore(score: number, isMate: boolean, mateIn?: number): string {
@@ -49,7 +49,9 @@ function EvalBar({ score, isMate }: { score: number; isMate: boolean }) {
   );
 }
 
-function StockfishEval({ state }: StockfishEvalProps) {
+function StockfishEval({ fen }: StockfishEvalProps) {
+  const state = useStockfish(fen, { depth: 20, multiPv: 3 });
+
   if (state.error) {
     return (
       <Box paddingX={1}>
@@ -90,15 +92,6 @@ function StockfishEval({ state }: StockfishEvalProps) {
         <Text> </Text>
         <Text bold color={scoreColor}>{scoreStr}</Text>
         <Text color="gray"> @ depth {evaluation.depth}</Text>
-      </Box>
-
-      <Box marginTop={1} flexDirection="column">
-        <Text color="gray">Best line:</Text>
-        <Box>
-          <Text color={defaultTheme.accent}>
-            {evaluation.pv.slice(0, 6).map(formatMove).join(' → ')}
-          </Text>
-        </Box>
       </Box>
 
       <Box marginTop={1}>

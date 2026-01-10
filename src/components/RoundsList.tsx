@@ -21,7 +21,7 @@ export default function RoundsList({
   token,
 }: RoundsListProps) {
   const [rounds, setRounds] = useState<BroadcastRound[]>([]);
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -93,8 +93,12 @@ export default function RoundsList({
             Select a round:
           </Text>
         </Box>
-        {rounds.length === 0 ? (
-          <Box padding={1}>
+        {loading ? (
+          <Box padding={1} minWidth={40}>
+            <Text color="yellow">Loading rounds...</Text>
+          </Box>
+        ) : rounds.length === 0 ? (
+          <Box padding={1} minWidth={40}>
             <Text color="gray">No rounds available</Text>
           </Box>
         ) : (

@@ -58,3 +58,20 @@ export async function clearOldCache(maxAge: number): Promise<void> {
     console.error('Cache cleanup error:', err);
   }
 }
+
+export interface RoundPGNCache {
+  roundId: string;
+  roundName: string;
+  broadcastId: string;
+  broadcastName: string;
+  pgn: string;
+  finishedAt: number;
+}
+
+export async function getRoundPGNCache(roundId: string): Promise<RoundPGNCache | null> {
+  return getCache<RoundPGNCache>(`round-pgn-${roundId}`, Number.MAX_SAFE_INTEGER);
+}
+
+export async function setRoundPGNCache(data: RoundPGNCache): Promise<void> {
+  await setCache(`round-pgn-${data.roundId}`, data);
+}

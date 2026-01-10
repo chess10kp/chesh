@@ -8,6 +8,8 @@ import Header from './components/Header.js';
 import { ViewState, Broadcast, Game } from './types/index.js';
 import { streamRoundPGN } from './lib/lichess-api.js';
 import { parsePGN } from './lib/pgn-parser.js';
+import { getRoundPGNCache, setRoundPGNCache } from './lib/cache.js';
+import { BroadcastRound } from './types/index.js';
 
 export default function App() {
   const [viewState, setViewState] = useState<ViewState>('broadcast-list');
@@ -62,18 +64,40 @@ export default function App() {
     setSelectedGame(game);
   };
 
-  const handleSelectRound = async (round: any) => {
+  const handleSelectRound = async (round: BroadcastRound) => {
     setLoadingGames(true);
     setRoundName(round.name);
 
     try {
-      const allPgnData: string[] = [];
+      let fullPgn = '';
 
-      await streamRoundPGN(round.id, (pgn: string) => {
-        allPgnData.push(pgn);
-      }, undefined, 4000);
+      if (round.finished) {
+        const cached = await getRoundPGNCache(round.id);
+        if (cached) {
+          fullPgn = cached.pgn;
+        }
+      }
 
-      const fullPgn = allPgnData.join('\n\n');
+      if (!fullPgn) {
+        const allPgnData: string[] = [];
+
+        await streamRoundPGN(round.id, (pgn: string) => {
+          allPgnData.push(pgn);
+        }, undefined, 4000);
+
+        fullPgn = allPgnData.join('\n\n');
+
+        if (round.finished && fullPgn.length > 0 && selectedBroadcast) {
+          await setRoundPGNCache({
+            roundId: round.id,
+            roundName: round.name,
+            broadcastId: selectedBroadcast.tour.id,
+            broadcastName: selectedBroadcast.tour.name,
+            pgn: fullPgn,
+            finishedAt: Date.now(),
+          });
+        }
+      }
 
       if (fullPgn.length === 0) {
         setGames([]);
