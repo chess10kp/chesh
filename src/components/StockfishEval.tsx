@@ -57,7 +57,7 @@ const StockfishEval = ({ fen }: StockfishEvalProps) => {
   if (state.error) {
     return (
       <Box flexDirection="column" paddingX={1} marginTop={1} height={EVAL_HEIGHT}>
-        <Text color="red">⚠ {state.error}</Text>
+        <Text color="red">{state.error}</Text>
       </Box>
     );
   }

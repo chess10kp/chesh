@@ -23,6 +23,23 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
     setState(prev => ({ ...prev, evaluation }));
   }, []);
 
+  const debouncedEvaluationRef = useRef<StockfishEvaluation | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedSetEvaluation = useCallback((evaluation: StockfishEvaluation) => {
+    debouncedEvaluationRef.current = evaluation;
+    
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    timeoutRef.current = setTimeout(() => {
+      if (debouncedEvaluationRef.current) {
+        setState(prev => ({ ...prev, evaluation: debouncedEvaluationRef.current! }));
+      }
+    }, 300);
+  }, []);
+
   const parseInfoLine = useCallback((line: string): Partial<StockfishEvaluation> | null => {
     if (!line.startsWith('info') || !line.includes('score')) {
       return null;
@@ -63,6 +80,11 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
 
   const startAnalysis = useCallback((fenToAnalyze: string) => {
     if (!processRef.current) return;
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
 
     const proc = processRef.current;
     proc.stdin?.write('stop\n');
@@ -109,7 +131,7 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
           } else if (line.startsWith('info')) {
             const parsed = parseInfoLine(line);
             if (parsed && parsed.depth && parsed.pv && parsed.pv.length > 0) {
-              setEvaluation({
+              debouncedSetEvaluation({
                 score: parsed.score ?? 0,
                 isMate: parsed.isMate ?? false,
                 mateIn: parsed.mateIn,
@@ -152,6 +174,9 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
     }
 
     return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       if (proc) {
         proc.stdin?.write('quit\n');
         proc.kill();

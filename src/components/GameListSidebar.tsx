@@ -20,7 +20,6 @@ function GameListSidebar({
 }: GameListSidebarProps) {
   const { height: terminalHeight } = useTerminalSize(150);
 
-  // Calculate dynamic height: terminal height - app header (4) - sidebar header (2) - border (2) - padding (2) - helpbar (3)
   const scrollViewHeight = useMemo(() => {
     const APP_HEADER_HEIGHT = 4; // border (2) + text (1) + marginBottom (1)
     const SIDEBAR_HEADER_HEIGHT = 2;

@@ -64,7 +64,7 @@ export const PIECE_SYMBOLS: Record<PieceColor, Record<PieceType, string>> = {
     rook: '♜',
     bishop: '♝',
     knight: '♞',
-    pawn: '♟\uFE0E',
+    pawn: '♟',
   },
 };
 
@@ -89,12 +89,7 @@ export const COMPACT_PIECES: Record<PieceColor, Record<PieceType, string>> = {
 
 export function getPieceSymbol(color: PieceColor, type: PieceType, size: PieceSize = 'small'): string {
   if (size === 'small') {
-    const symbol = PIECE_SYMBOLS[color][type];
-    // Black pawn with FE0E renders as half-width, add space to match other pieces
-    if (color === 'black' && type === 'pawn') {
-      return symbol + ' ';
-    }
-    return symbol;
+    return PIECE_SYMBOLS[color][type];
   }
   return COMPACT_PIECES[color][type];
 }
