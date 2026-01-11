@@ -13,12 +13,12 @@ function Header({ loading, loadingGames, loadingRounds }: HeaderProps) {
       <Box flexGrow={1}>
         <Text bold color="cyan">Check.sh</Text>
       </Box>
-      <Box width={25}>
-        {(loading || loadingGames || loadingRounds) && (
-          <Text color="yellow">
-            {loadingGames ? 'Loading games from PGN...' : loadingRounds ? 'Loading rounds...' : 'Loading...'}
-          </Text>
-        )}
+      <Box width={25} height={1}>
+        <Text color="yellow" dimColor={!(loading || loadingGames || loadingRounds)}>
+          {(loading || loadingGames || loadingRounds)
+            ? (loadingGames ? 'Loading games from PGN...' : loadingRounds ? 'Loading rounds...' : 'Loading...')
+            : ' '}
+        </Text>
       </Box>
     </Box>
   );
