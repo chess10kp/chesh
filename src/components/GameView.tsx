@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Box, useInput } from 'ink';
 import ChessBoard from './ChessBoard.js';
 import PlayerInfo from './PlayerInfo.js';
@@ -7,6 +7,17 @@ import GameListSidebar from './GameListSidebar.js';
 import StockfishEval from './StockfishEval.js';
 import { Game } from '../types/index.js';
 import HelpBar from './HelpBar.js';
+import { useTerminalSize } from '../hooks/useTerminalSize.js';
+
+function simpleHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash;
+}
 
 type FocusArea = 'board' | 'sidebar';
 
@@ -23,6 +34,13 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
   );
   const [focus, setFocus] = useState<FocusArea>('board');
   const [sidebarSelectedIndex, setSidebarSelectedIndex] = useState(0);
+
+  const { width: terminalWidth, height: terminalHeight } = useTerminalSize(150);
+  const isCompactMode = useMemo(() => {
+    const COMPACT_MIN_WIDTH = 75;
+    const COMPACT_MIN_HEIGHT = 27;
+    return terminalWidth < COMPACT_MIN_WIDTH || terminalHeight < COMPACT_MIN_HEIGHT;
+  }, [terminalWidth, terminalHeight]);
 
   const viewedGameIndex = games.findIndex(g => g.id === game.id);
 
@@ -48,12 +66,33 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
   );
   const canGoPrevious = currentMoveIndex > 0;
 
-  const lastMoveFrom = game.lastMove?.substring(0, 2);
-  const lastMoveTo = game.lastMove?.substring(2, 4);
+  const lastMoveRef = useRef<{ from: string; to: string } | undefined>(undefined);
   const lastMove = useMemo(
-    () => lastMoveFrom && lastMoveTo ? { from: lastMoveFrom, to: lastMoveTo } : undefined,
-    [lastMoveFrom, lastMoveTo]
+    () => {
+      const currentMoveStr = game.moveHistory?.[currentMoveIndex];
+      if (!currentMoveStr) {
+        if (lastMoveRef.current === undefined) {
+          return undefined;
+        }
+        lastMoveRef.current = undefined;
+        return undefined;
+      }
+      
+      const lastMoveFrom = currentMoveStr.substring(0, 2);
+      const lastMoveTo = currentMoveStr.substring(2, 4);
+      const newLastMove = { from: lastMoveFrom, to: lastMoveTo };
+      
+      if (lastMoveRef.current?.from === newLastMove.from &&
+          lastMoveRef.current?.to === newLastMove.to) {
+        return lastMoveRef.current;
+      }
+      lastMoveRef.current = newLastMove;
+      return newLastMove;
+    },
+    [game.moveHistory, currentMoveIndex]
   );
+
+  const boardKey = useMemo(() => currentFEN ? `board-${simpleHash(currentFEN)}` : 'board', [currentFEN]);
 
   useInput((input, key) => {
     if (input === 'q') {
@@ -86,58 +125,89 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
     <Box flexDirection="column" height="100%" padding={1}>
       <Box flexDirection="column" flexGrow={1}>
 
-        <Box flexDirection="row">
-          <GameListSidebar
-            games={games}
-            selectedIndex={sidebarSelectedIndex}
-            viewedGameIndex={viewedGameIndex}
-            hasFocus={focus === 'sidebar'}
-          />
-
-          <Box
-            flexDirection="column"
-            borderStyle="single"
-            borderColor={focus === 'board' ? 'cyan' : 'gray'}
-            paddingX={2}
-            marginX={1}
-          >
-            {currentFEN && (
-              <ChessBoard fen={currentFEN} lastMove={lastMove} />
+        {isCompactMode ? (
+          <Box flexDirection="column">
+            {blackPlayer && (
+              <PlayerInfo
+                player={blackPlayer}
+                isWhite={false}
+                isActive={game.status === 'playing'}
+              />
+            )}
+            <Box
+              flexDirection="column"
+              borderStyle="single"
+              borderColor="greenBright"
+              paddingX={2}
+            >
+              {currentFEN && (
+                <ChessBoard key={boardKey} fen={currentFEN} lastMove={lastMove} />
+              )}
+            </Box>
+            {whitePlayer && (
+              <PlayerInfo
+                player={whitePlayer}
+                isWhite={true}
+                isActive={game.status === 'playing'}
+              />
             )}
           </Box>
+        ) : (
+          <Box flexDirection="row">
+            <GameListSidebar
+              games={games}
+              selectedIndex={sidebarSelectedIndex}
+              viewedGameIndex={viewedGameIndex}
+              hasFocus={focus === 'sidebar'}
+            />
 
-          <Box flexDirection="column" width={45}>
-            <Box flexDirection='column' flexGrow={1} marginTop={1}>
-              {whitePlayer && (
-                <PlayerInfo
-                  player={whitePlayer}
-                  isWhite={true}
-                  isActive={game.status === 'playing'}
-                />
-              )}
-              {blackPlayer && (
-                <PlayerInfo
-                  player={blackPlayer}
-                  isWhite={false}
-                  isActive={game.status === 'playing'}
-                />
+            <Box
+              flexDirection="column"
+              borderStyle="single"
+              borderColor={focus === 'board' ? 'greenBright' : 'gray'}
+              paddingX={2}
+              marginX={1}
+            >
+              {currentFEN && (
+                <ChessBoard key={boardKey} fen={currentFEN} lastMove={lastMove} />
               )}
             </Box>
 
-            <Box marginTop={1} flexGrow={1}>
-              <MoveHistory moves={game.moves} currentMoveIndex={currentMoveIndex} />
-            </Box>
+            <Box flexDirection="column" width={45}>
+              <Box flexDirection='column' flexGrow={1} marginTop={1}>
+                {whitePlayer && (
+                  <PlayerInfo
+                    player={whitePlayer}
+                    isWhite={true}
+                    isActive={game.status === 'playing'}
+                  />
+                )}
+                {blackPlayer && (
+                  <PlayerInfo
+                    player={blackPlayer}
+                    isWhite={false}
+                    isActive={game.status === 'playing'}
+                  />
+                )}
+              </Box>
 
-            <StockfishEval fen={currentFEN} />
+              <Box marginTop={1} flexGrow={1}>
+                <MoveHistory moves={game.moves} currentMoveIndex={currentMoveIndex} />
+              </Box>
+
+              <StockfishEval fen={currentFEN} />
+            </Box>
           </Box>
-        </Box>
+        )}
       </Box>
 
-      <HelpBar shortcuts={
-        focus === 'board'
-          ? "[n/→] Next move | [p/←] Prev move | [Tab] Sidebar | [q] Return"
-          : "[↑/k] Up | [↓/j] Down | [Enter] Select | [Tab] Board | [q] Return"
-      } />
+      {!isCompactMode && (
+        <HelpBar shortcuts={
+          focus === 'board'
+            ? "[n/→] Next move | [p/←] Prev move | [Tab] Sidebar | [q] Return"
+            : "[↑/k] Up | [↓/j] Down | [Enter] Select | [Tab] Board | [q] Return"
+        } />
+      )}
     </Box>
   );
 }

@@ -42,6 +42,7 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }, index: number)
   let fen: string | undefined;
   let status: 'started' | 'playing' | 'aborted' | 'mate' | 'draw' | 'resign' | 'stalemate' | 'timeout' | 'outoftime' = 'started';
   const fenHistory: string[] = [];
+  const moveHistory: (string | undefined)[] = [undefined];
 
   try {
     if (moves && moves.length > 0) {
@@ -54,6 +55,7 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }, index: number)
           const moveResult = chess.move(moveNotation);
           if (moveResult) {
             fenHistory.push(chess.fen());
+            moveHistory.push(moveResult.from + moveResult.to);
           }
         }
       }
@@ -95,6 +97,7 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }, index: number)
     status,
     pgn: pgnText,
     fenHistory,
+    moveHistory,
     currentMoveIndex: fenHistory.length - 1,
     moves: moveNotations,
   };

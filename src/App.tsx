@@ -16,21 +16,31 @@ export default function App() {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingGames, setLoadingGames] = useState(false);
+  const [loadingRounds, setLoadingRounds] = useState(false);
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
   const [games, setGames] = useState<Game[]>([]);
   const [roundName, setRoundName] = useState<string>('');
   const [resizeKey, setResizeKey] = useState(0);
 
   useEffect(() => {
+    const resizeTimeoutRef = { current: null as NodeJS.Timeout | null };
     const handleResize = () => {
-      process.stdout.write('\x1B[2J\x1B[H');
-      setResizeKey(prev => prev + 1);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      resizeTimeoutRef.current = setTimeout(() => {
+        process.stdout.write('\x1B[2J\x1B[H');
+        setResizeKey(prev => prev + 1);
+      }, 100);
     };
 
     process.stdout.on('resize', handleResize);
 
     return () => {
       process.stdout.off('resize', handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -122,7 +132,7 @@ export default function App() {
 
   return (
     <Box flexDirection="column">
-      <Header loading={loading} loadingGames={loadingGames} />
+      <Header loading={loading} loadingGames={loadingGames} loadingRounds={loadingRounds} />
 
       {viewState === 'broadcast-list' ? (
         <BroadcastList
@@ -135,6 +145,7 @@ export default function App() {
           broadcastName={selectedBroadcast.tour.name}
           onSelectRound={handleSelectRound}
           onBack={handleBackToList}
+          setLoadingRounds={setLoadingRounds}
         />
       ) : viewState === 'games-list' ? (
         <GamesList

@@ -42,6 +42,7 @@ export interface Game {
   blackClock?: number;
   pgn?: string;
   fenHistory?: string[];
+  moveHistory?: (string | undefined)[];
   currentMoveIndex?: number;
 }
 

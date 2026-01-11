@@ -18,7 +18,7 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
 
   const processRef = useRef<ChildProcess | null>(null);
   const currentFenRef = useRef<string | undefined>(undefined);
-
+  
   const setEvaluation = useCallback((evaluation: StockfishEvaluation) => {
     setState(prev => ({ ...prev, evaluation }));
   }, []);

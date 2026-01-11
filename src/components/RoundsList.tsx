@@ -11,6 +11,7 @@ interface RoundsListProps {
   onSelectRound: (round: BroadcastRound) => void;
   onBack: () => void;
   token?: string;
+  setLoadingRounds?: (loading: boolean) => void;
 }
 
 export default function RoundsList({
@@ -19,11 +20,16 @@ export default function RoundsList({
   onSelectRound,
   onBack,
   token,
+  setLoadingRounds,
 }: RoundsListProps) {
   const [rounds, setRounds] = useState<BroadcastRound[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useEffect(() => {
+    setLoadingRounds?.(loading);
+  }, [loading, setLoadingRounds]);
 
   useEffect(() => {
     const fetchRounds = async () => {
@@ -93,11 +99,7 @@ export default function RoundsList({
             Select a round:
           </Text>
         </Box>
-        {loading ? (
-          <Box padding={1} minWidth={40}>
-            <Text color="yellow">Loading rounds...</Text>
-          </Box>
-        ) : rounds.length === 0 ? (
+        {loading ? null : rounds.length === 0 ? (
           <Box padding={1} minWidth={40}>
             <Text color="gray">No rounds available</Text>
           </Box>

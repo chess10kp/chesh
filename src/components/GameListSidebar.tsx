@@ -24,11 +24,11 @@ function GameListSidebar({
       flexDirection="column"
       width={45}
       borderStyle="single"
-      borderColor={hasFocus ? 'cyan' : 'gray'}
+      borderColor={hasFocus ? 'greenBright' : 'gray'}
       paddingX={1}
     >
       <Box marginBottom={1}>
-        <Text bold color={hasFocus ? 'cyan' : 'gray'}>
+        <Text bold color={hasFocus ? 'greenBright' : 'gray'}>
           Games ({games.length})
         </Text>
       </Box>
@@ -47,12 +47,11 @@ function GameListSidebar({
           return (
             <Box key={game.id || index}>
               <Box
-                backgroundColor={isViewed ? defaultTheme.highlight : undefined}
+                backgroundColor={isSelected ? defaultTheme.highlight : undefined}
                 paddingX={1}
                 width="100%"
               >
-                <Text>
-                  {isSelected && !isViewed ? '> ' : '  '}
+                <Text bold={isViewed}>
                   {truncateText(gameTitle, maxNameWidth)}
                   {game.status && (
                     <Text color="gray"> ({game.status})</Text>

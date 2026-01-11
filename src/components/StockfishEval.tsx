@@ -23,7 +23,7 @@ function formatMove(move: string): string {
   return `${from}-${to}${promotion}`;
 }
 
-function EvalBar({ score, isMate }: { score: number; isMate: boolean }) {
+const EvalBar = memo(function EvalBar({ score, isMate }: { score: number; isMate: boolean }) {
   const barWidth = 20;
   
   let whitePercent: number;
@@ -47,14 +47,16 @@ function EvalBar({ score, isMate }: { score: number; isMate: boolean }) {
       </Text>
     </Box>
   );
-}
+});
+
+const EVAL_HEIGHT = 6;
 
 function StockfishEval({ fen }: StockfishEvalProps) {
   const state = useStockfish(fen, { depth: 20, multiPv: 3 });
 
   if (state.error) {
     return (
-      <Box paddingX={1}>
+      <Box flexDirection="column" paddingX={1} marginTop={1} height={EVAL_HEIGHT}>
         <Text color="red">⚠ {state.error}</Text>
       </Box>
     );
@@ -62,7 +64,7 @@ function StockfishEval({ fen }: StockfishEvalProps) {
 
   if (!state.isReady) {
     return (
-      <Box paddingX={1}>
+      <Box flexDirection="column" paddingX={1} marginTop={1} height={EVAL_HEIGHT}>
         <Text color="yellow">Starting Stockfish...</Text>
       </Box>
     );
@@ -70,7 +72,7 @@ function StockfishEval({ fen }: StockfishEvalProps) {
 
   if (!state.evaluation) {
     return (
-      <Box paddingX={1}>
+      <Box flexDirection="column" paddingX={1} marginTop={1} height={EVAL_HEIGHT}>
         <Text color="gray">Analyzing...</Text>
       </Box>
     );
@@ -81,7 +83,7 @@ function StockfishEval({ fen }: StockfishEvalProps) {
   const scoreColor = evaluation.score > 0.3 ? 'green' : evaluation.score < -0.3 ? 'red' : 'yellow';
 
   return (
-    <Box flexDirection="column" paddingX={1} marginTop={1}>
+    <Box flexDirection="column" paddingX={1} marginTop={1} height={EVAL_HEIGHT}>
       <Box marginBottom={1}>
         <Text bold color={defaultTheme.accent}>Engine Evaluation</Text>
         {evaluation.isAnalyzing && <Text color="gray"> (analyzing...)</Text>}

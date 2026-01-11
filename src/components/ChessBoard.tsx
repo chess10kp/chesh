@@ -1,4 +1,4 @@
-import { useMemo, memo } from 'react';
+import { useMemo, memo, useRef } from 'react';
 import { Box, Text } from 'ink';
 import { getPieceSymbol, renderPixelArtPiece, PieceSize } from '../lib/pieces.js';
 import { rgbToInkColor, defaultTheme } from '../lib/themes.js';
@@ -6,6 +6,7 @@ import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
 const CELL_WIDTH = 8;
 const PIXEL_ART_CELL_WIDTH = 18;
+const SMALL_CELL_HEIGHT = 3;
 
 interface ChessBoardProps {
   fen: string;
@@ -17,6 +18,126 @@ interface Square {
   piece: { color: 'white' | 'black'; type: 'king' | 'queen' | 'rook' | 'bishop' | 'knight' | 'pawn' } | null;
 }
 
+interface CompactSquareProps {
+  square: Square;
+  isWhiteSquare: boolean;
+  isLastMove: boolean;
+}
+
+const CompactSquare = memo(function CompactSquare({ square, isWhiteSquare, isLastMove }: CompactSquareProps) {
+  const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
+  console.log(`[CompactSquare] Render ${square.position}`, { piece: square.piece, isWhiteSquare, isLastMove });
+  const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
+  const symbol = square.piece
+    ? getPieceSymbol(square.piece.color, square.piece.type, 'compact')
+    : '\n       \n        ';
+
+  return (
+    <Box
+      width={CELL_WIDTH}
+      justifyContent="center"
+      backgroundColor={isLastMove ? defaultTheme.highlight : bgColor}
+    >
+      <Text color={pieceColor}>
+        {symbol}
+      </Text>
+    </Box>
+  );
+}, (prev, next) => {
+  return prev.isWhiteSquare === next.isWhiteSquare &&
+    prev.isLastMove === next.isLastMove &&
+    prev.square.piece?.color === next.square.piece?.color &&
+    prev.square.piece?.type === next.square.piece?.type;
+});
+
+interface SmallSquareCellProps {
+  square: Square;
+  isWhiteSquare: boolean;
+  isLastMove: boolean;
+  cellRow: number;
+}
+
+const SmallSquareCell = memo(function SmallSquareCell({ square, isWhiteSquare, isLastMove, cellRow }: SmallSquareCellProps) {
+  const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
+  console.log(`[SmallSquareCell] Render ${square.position}`, { piece: square.piece, isWhiteSquare, isLastMove, cellRow });
+  const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
+  const isMiddleRow = cellRow === Math.floor(SMALL_CELL_HEIGHT / 2);
+
+  let content = ' '.repeat(CELL_WIDTH);
+  if (isMiddleRow && square.piece) {
+    const symbol = getPieceSymbol(square.piece.color, square.piece.type, 'small');
+    const padding = Math.floor((CELL_WIDTH - 1) / 2);
+    content = ' '.repeat(padding) + symbol + ' '.repeat(CELL_WIDTH - padding - 1);
+  }
+
+  return (
+    <Box
+      width={CELL_WIDTH}
+      backgroundColor={isLastMove ? defaultTheme.highlight : bgColor}
+    >
+      <Text color={pieceColor}>{content}</Text>
+    </Box>
+  );
+}, (prev, next) => {
+  return prev.isWhiteSquare === next.isWhiteSquare &&
+    prev.isLastMove === next.isLastMove &&
+    prev.square.piece?.color === next.square.piece?.color &&
+    prev.square.piece?.type === next.square.piece?.type &&
+    prev.cellRow === next.cellRow;
+});
+
+interface PixelArtSquareRowProps {
+  squares: Square[];
+  pixelRow: number;
+  rankIndex: number;
+  lastMoveFrom?: string;
+  lastMoveTo?: string;
+}
+
+const PixelArtSquareRow = memo(function PixelArtSquareRow({ squares, pixelRow, rankIndex, lastMoveFrom, lastMoveTo }: PixelArtSquareRowProps) {
+  const PIECE_HEIGHT = 8;
+  console.log(`[PixelArtSquareRow] Render rank=${8-rankIndex} pixelRow=${pixelRow}`, { squaresCount: squares.length, lastMoveFrom, lastMoveTo });
+  return (
+    <Box flexDirection="row">
+      {squares.map((square, fileIndex) => {
+        const file = String.fromCharCode(97 + fileIndex);
+        const rank = 8 - rankIndex;
+        const isWhiteSquare = (rankIndex + fileIndex) % 2 === 0;
+        const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
+        const isLastMove = (lastMoveFrom === square.position || lastMoveTo === square.position);
+
+        const pixelRows = square.piece
+          ? renderPixelArtPiece(square.piece.color, square.piece.type).split('\n')
+          : Array(PIECE_HEIGHT).fill('              ');
+
+        const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
+
+        return (
+          <Box
+            key={`${file}${rank}-pixel-${pixelRow}`}
+            width={PIXEL_ART_CELL_WIDTH}
+            justifyContent="flex-start"
+            backgroundColor={isLastMove ? defaultTheme.highlight : bgColor}
+          >
+            <Text color={pieceColor}>{pixelRows[pixelRow]}</Text>
+          </Box>
+        );
+      })}
+    </Box>
+  );
+}, (prev, next) => {
+  return prev.pixelRow === next.pixelRow &&
+    prev.rankIndex === next.rankIndex &&
+    prev.lastMoveFrom === next.lastMoveFrom &&
+    prev.lastMoveTo === next.lastMoveTo &&
+    prev.squares.every((s, i) => {
+      const ns = next.squares[i];
+      return s.position === ns?.position &&
+        s.piece?.color === ns?.piece?.color &&
+        s.piece?.type === ns?.piece?.type;
+    });
+});
+
 interface PixelArtBoardProps {
   squares: Square[][];
   lastMove?: { from: string; to: string };
@@ -24,6 +145,8 @@ interface PixelArtBoardProps {
 
 const PixelArtBoard = memo(function PixelArtBoard({ squares, lastMove }: PixelArtBoardProps) {
   const PIECE_HEIGHT = 8;
+  const lastMoveFrom = lastMove?.from;
+  const lastMoveTo = lastMove?.to;
 
   return (
     <Box flexDirection="column">
@@ -40,29 +163,14 @@ const PixelArtBoard = memo(function PixelArtBoard({ squares, lastMove }: PixelAr
                   </Box>
                 )}
                 {pixelRow > 0 && <Box width={1} />}
-                {row.map((square, fileIndex) => {
-                  const file = String.fromCharCode(97 + fileIndex);
-                  const isWhiteSquare = (rankIndex + fileIndex) % 2 === 0;
-                  const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
-                  const isLastMove = lastMove && (lastMove.from === square.position || lastMove.to === square.position);
-
-                  const pixelRows = square.piece
-                    ? renderPixelArtPiece(square.piece.color, square.piece.type).split('\n')
-                    : Array(PIECE_HEIGHT).fill('              ');
-
-                  const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
-
-                  return (
-                    <Box
-                      key={`${file}${rank}`}
-                      width={PIXEL_ART_CELL_WIDTH}
-                      justifyContent="flex-start"
-                      backgroundColor={isLastMove ? defaultTheme.highlight : bgColor}
-                    >
-                      <Text color={pieceColor}>{pixelRows[pixelRow]}</Text>
-                    </Box>
-                  );
-                })}
+                <PixelArtSquareRow
+                  key={`rank-${rank}-row-${pixelRow}`}
+                  squares={row}
+                  pixelRow={pixelRow}
+                  rankIndex={rankIndex}
+                  lastMoveFrom={lastMoveFrom}
+                  lastMoveTo={lastMoveTo}
+                />
               </Box>
             ))}
           </Box>
@@ -111,10 +219,87 @@ function ChessBoard({ fen, lastMove }: ChessBoardProps) {
   }, [terminalHeight, terminalWidth]);
 
   const effectiveFen = fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-  const squares = useMemo(() => parseFenToSquares(effectiveFen), [effectiveFen]);
+  const prevSquaresRef = useRef<Square[][]>([]);
+  
+  const squares = useMemo(() => {
+    const newSquares = parseFenToSquares(effectiveFen);
+    const prevSquares = prevSquaresRef.current;
+    
+    if (prevSquares.length === 0) {
+      prevSquaresRef.current = newSquares;
+      return newSquares;
+    }
+    
+    let hasChanges = false;
+    const result = newSquares.map((row, rankIndex) => {
+      return row.map((square, fileIndex) => {
+        const prev = prevSquares[rankIndex]?.[fileIndex];
+        if (prev &&
+            prev.position === square.position &&
+            prev.piece?.color === square.piece?.color &&
+            prev.piece?.type === square.piece?.type) {
+          return prev;
+        }
+        hasChanges = true;
+        return square;
+      });
+    });
+    
+    if (hasChanges) {
+      prevSquaresRef.current = result;
+    }
+    return result;
+  }, [effectiveFen]);
 
   if (pieceSize === 'pixel-art') {
     return <PixelArtBoard squares={squares} lastMove={lastMove} />;
+  }
+
+  if (pieceSize === 'small') {
+    return (
+      <Box flexDirection="column">
+        {squares.map((row, rankIndex) => {
+          const rank = 8 - rankIndex;
+          return (
+            <Box key={`rank-${rank}`} flexDirection="column">
+              {Array.from({ length: SMALL_CELL_HEIGHT }).map((_, cellRow) => {
+                const isMiddleRow = cellRow === Math.floor(SMALL_CELL_HEIGHT / 2);
+                return (
+                  <Box key={`rank-${rank}-row-${cellRow}`} flexDirection="row">
+                    <Box width={1} justifyContent="center">
+                      {isMiddleRow ? <Text color="gray">{rank}</Text> : <Text> </Text>}
+                    </Box>
+                    {row.map((square, fileIndex) => {
+                      const file = String.fromCharCode(97 + fileIndex);
+                      const isWhiteSquare = (rankIndex + fileIndex) % 2 === 0;
+                      const isLastMove = !!(lastMove && (lastMove.from === square.position || lastMove.to === square.position));
+
+                      return (
+                        <SmallSquareCell
+                          key={`${file}${rank}-row-${cellRow}`}
+                          square={square}
+                          isWhiteSquare={isWhiteSquare}
+                          isLastMove={isLastMove}
+                          cellRow={cellRow}
+                        />
+                      );
+                    })}
+                  </Box>
+                );
+              })}
+            </Box>
+          );
+        })}
+        <Box flexDirection="row">
+          <Box width={1} />
+          {'abcdefgh'.split('').map(file => (
+            <Box key={file} width={CELL_WIDTH} justifyContent="center">
+              <Text color="gray">{file}</Text>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    );
   }
 
   return (
@@ -128,28 +313,15 @@ function ChessBoard({ fen, lastMove }: ChessBoardProps) {
             {row.map((square, fileIndex) => {
             const file = String.fromCharCode(97 + fileIndex);
             const isWhiteSquare = (rankIndex + fileIndex) % 2 === 0;
-            const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
-            const isLastMove = lastMove && (lastMove.from === square.position || lastMove.to === square.position);
-
-            const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
-            let symbol: string;
-            if (square.piece) {
-              symbol = getPieceSymbol(square.piece.color, square.piece.type, pieceSize);
-            } else {
-              symbol = pieceSize === 'compact' ? '\n       \n        ' : '';
-            }
+            const isLastMove = !!(lastMove && (lastMove.from === square.position || lastMove.to === square.position));
 
             return (
-              <Box
+              <CompactSquare
                 key={`${file}${8 - rankIndex}`}
-                width={CELL_WIDTH}
-                justifyContent="center"
-                backgroundColor={isLastMove ? defaultTheme.highlight : bgColor}
-              >
-                <Text color={pieceColor}>
-                  {symbol}
-                </Text>
-              </Box>
+                square={square}
+                isWhiteSquare={isWhiteSquare}
+                isLastMove={isLastMove}
+              />
             );
             })}
           </Box>
