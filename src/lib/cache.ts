@@ -75,3 +75,58 @@ export async function getRoundPGNCache(roundId: string): Promise<RoundPGNCache |
 export async function setRoundPGNCache(data: RoundPGNCache): Promise<void> {
   await setCache(`round-pgn-${data.roundId}`, data);
 }
+
+export interface TournamentSlugCache {
+  [tournamentName: string]: string;
+}
+
+export async function getTournamentSlugCache(tournamentName: string): Promise<string | null> {
+  const cache = await getCache<TournamentSlugCache>('tournament-slugs', 24 * 60 * 60 * 1000);
+  return cache?.[tournamentName] || null;
+}
+
+export async function setTournamentSlugCache(tournamentName: string, slug: string): Promise<void> {
+  const cache = await getCache<TournamentSlugCache>('tournament-slugs', 24 * 60 * 60 * 1000) || {};
+  cache[tournamentName] = slug;
+  await setCache('tournament-slugs', cache);
+}
+
+import type { Game } from '../types/index.js';
+
+export interface FavoriteGame {
+  game: Game;
+  savedAt: number;
+}
+
+export interface FavoritesCache {
+  games: FavoriteGame[];
+}
+
+const FAVORITES_CACHE_KEY = 'favorites';
+
+export async function getFavorites(): Promise<FavoritesCache> {
+  const cache = await getCache<FavoritesCache>(FAVORITES_CACHE_KEY, Number.MAX_SAFE_INTEGER);
+  return cache || { games: [] };
+}
+
+export async function addFavorite(game: Game): Promise<boolean> {
+  const favorites = await getFavorites();
+  const exists = favorites.games.some(f => f.game.id === game.id);
+  if (exists) {
+    return false;
+  }
+  favorites.games.push({ game, savedAt: Date.now() });
+  await setCache(FAVORITES_CACHE_KEY, favorites);
+  return true;
+}
+
+export async function removeFavorite(gameId: string): Promise<boolean> {
+  const favorites = await getFavorites();
+  const initialLength = favorites.games.length;
+  favorites.games = favorites.games.filter(f => f.game.id !== gameId);
+  if (favorites.games.length < initialLength) {
+    await setCache(FAVORITES_CACHE_KEY, favorites);
+    return true;
+  }
+  return false;
+}

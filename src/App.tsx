@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box } from 'ink';
+import { Box, useApp } from 'ink';
 import BroadcastList from './components/BroadcastList.js';
 import RoundsList from './components/RoundsList.js';
 import GamesList from './components/GamesList.js';
@@ -12,6 +12,7 @@ import { getRoundPGNCache, setRoundPGNCache } from './lib/cache.js';
 import { BroadcastRound } from './types/index.js';
 
 export default function App() {
+  const { exit } = useApp();
   const [viewState, setViewState] = useState<ViewState>('broadcast-list');
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(false);
@@ -138,6 +139,7 @@ export default function App() {
         <BroadcastList
           onSelectBroadcast={handleSelectBroadcast}
           setLoading={setLoading}
+          onQuit={exit}
         />
       ) : viewState === 'rounds-list' && selectedBroadcast ? (
         <RoundsList

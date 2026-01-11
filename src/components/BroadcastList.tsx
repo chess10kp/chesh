@@ -9,9 +9,10 @@ import ScrollView, { truncateText } from './ScrollView.js';
 interface BroadcastListProps {
   onSelectBroadcast: (broadcast: Broadcast) => void;
   setLoading?: (loading: boolean) => void;
+  onQuit?: () => void;
 }
 
-export default function BroadcastList({ onSelectBroadcast, setLoading }: BroadcastListProps) {
+export default function BroadcastList({ onSelectBroadcast, setLoading, onQuit }: BroadcastListProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { broadcasts, loading, error, refresh } = useBroadcasts();
 
@@ -40,12 +41,12 @@ export default function BroadcastList({ onSelectBroadcast, setLoading }: Broadca
         onSelectBroadcast(selected);
       }
     } else if (key.escape) {
-      process.exit(0);
+      onQuit?.();
     } else if (input === 'r') {
       refresh();
       if (setLoading) setLoading(true);
     } else if (input === 'q') {
-      process.exit(0);
+      onQuit?.();
     }
   });
 

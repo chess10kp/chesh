@@ -8,6 +8,7 @@ import StockfishEval from './StockfishEval.js';
 import { Game } from '../types/index.js';
 import HelpBar from './HelpBar.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
+import { addFavorite } from '../lib/cache.js';
 
 function simpleHash(str: string): number {
   let hash = 0;
@@ -34,6 +35,7 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
   );
   const [focus, setFocus] = useState<FocusArea>('board');
   const [sidebarSelectedIndex, setSidebarSelectedIndex] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'exists'>('idle');
 
   const { width: terminalWidth, height: terminalHeight } = useTerminalSize(150);
   const isCompactMode = useMemo(() => {
@@ -107,6 +109,11 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
       }
     } else if (key.tab) {
       setFocus(prev => prev === 'board' ? 'sidebar' : 'board');
+    } else if (input === 's') {
+      addFavorite(game).then(added => {
+        setSaveStatus(added ? 'saved' : 'exists');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      });
     } else if (focus === 'sidebar') {
       if (key.upArrow || input === 'k') {
         setSidebarSelectedIndex(i => Math.max(0, i - 1));
@@ -204,7 +211,7 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
       {!isCompactMode && (
         <HelpBar shortcuts={
           focus === 'board'
-            ? "[n/→] Next move | [p/←] Prev move | [Tab] Sidebar | [q] Return"
+            ? `[n/→] Next move | [p/←] Prev move | [s] Save | [Tab] Sidebar | [q] Return${saveStatus === 'saved' ? ' ✓ Saved!' : saveStatus === 'exists' ? ' (already saved)' : ''}`
             : "[↑/k] Up | [↓/j] Down | [Enter] Select | [Tab] Board | [q] Return"
         } />
       )}

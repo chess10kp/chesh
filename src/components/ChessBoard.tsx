@@ -24,9 +24,8 @@ interface CompactSquareProps {
   isLastMove: boolean;
 }
 
-const CompactSquare = memo(function CompactSquare({ square, isWhiteSquare, isLastMove }: CompactSquareProps) {
+function CompactSquare({ square, isWhiteSquare, isLastMove }: CompactSquareProps) {
   const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
-  console.log(`[CompactSquare] Render ${square.position}`, { piece: square.piece, isWhiteSquare, isLastMove });
   const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
   const symbol = square.piece
     ? getPieceSymbol(square.piece.color, square.piece.type, 'compact')
@@ -43,11 +42,51 @@ const CompactSquare = memo(function CompactSquare({ square, isWhiteSquare, isLas
       </Text>
     </Box>
   );
+}
+
+interface CompactBoardRowProps {
+  row: Square[];
+  rankIndex: number;
+  lastMoveFrom?: string;
+  lastMoveTo?: string;
+}
+
+const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo }: CompactBoardRowProps) {
+  return (
+    <Box flexDirection="row">
+      <Box width={1} justifyContent="center">
+        <Text color="gray">{8 - rankIndex}</Text>
+      </Box>
+      {row.map((square, fileIndex) => {
+        const file = String.fromCharCode(97 + fileIndex);
+        const isWhiteSquare = (rankIndex + fileIndex) % 2 === 0;
+        const isLastMove = lastMoveFrom === square.position || lastMoveTo === square.position;
+
+        return (
+          <CompactSquare
+            key={`${file}${8 - rankIndex}`}
+            square={square}
+            isWhiteSquare={isWhiteSquare}
+            isLastMove={isLastMove}
+          />
+        );
+      })}
+    </Box>
+  );
 }, (prev, next) => {
-  return prev.isWhiteSquare === next.isWhiteSquare &&
-    prev.isLastMove === next.isLastMove &&
-    prev.square.piece?.color === next.square.piece?.color &&
-    prev.square.piece?.type === next.square.piece?.type;
+  if (prev.rankIndex !== next.rankIndex) return false;
+  
+  const rank = String(8 - prev.rankIndex);
+  const prevAffectsRank = prev.lastMoveFrom?.[1] === rank || prev.lastMoveTo?.[1] === rank;
+  const nextAffectsRank = next.lastMoveFrom?.[1] === rank || next.lastMoveTo?.[1] === rank;
+  
+  if (prevAffectsRank !== nextAffectsRank) return false;
+  if (nextAffectsRank && (prev.lastMoveFrom !== next.lastMoveFrom || prev.lastMoveTo !== next.lastMoveTo)) return false;
+  
+  return prev.row.every((s, i) => {
+    const ns = next.row[i];
+    return s.piece?.color === ns?.piece?.color && s.piece?.type === ns?.piece?.type;
+  });
 });
 
 interface SmallSquareCellProps {
@@ -57,9 +96,8 @@ interface SmallSquareCellProps {
   cellRow: number;
 }
 
-const SmallSquareCell = memo(function SmallSquareCell({ square, isWhiteSquare, isLastMove, cellRow }: SmallSquareCellProps) {
+function SmallSquareCell({ square, isWhiteSquare, isLastMove, cellRow }: SmallSquareCellProps) {
   const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
-  console.log(`[SmallSquareCell] Render ${square.position}`, { piece: square.piece, isWhiteSquare, isLastMove, cellRow });
   const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
   const isMiddleRow = cellRow === Math.floor(SMALL_CELL_HEIGHT / 2);
 
@@ -78,12 +116,56 @@ const SmallSquareCell = memo(function SmallSquareCell({ square, isWhiteSquare, i
       <Text color={pieceColor}>{content}</Text>
     </Box>
   );
+}
+
+interface SmallBoardRowProps {
+  row: Square[];
+  rankIndex: number;
+  cellRow: number;
+  lastMoveFrom?: string;
+  lastMoveTo?: string;
+}
+
+const SmallBoardRow = memo(function SmallBoardRow({ row, rankIndex, cellRow, lastMoveFrom, lastMoveTo }: SmallBoardRowProps) {
+  const rank = 8 - rankIndex;
+  const isMiddleRow = cellRow === Math.floor(SMALL_CELL_HEIGHT / 2);
+  
+  return (
+    <Box flexDirection="row">
+      <Box width={1} justifyContent="center">
+        {isMiddleRow ? <Text color="gray">{rank}</Text> : <Text> </Text>}
+      </Box>
+      {row.map((square, fileIndex) => {
+        const file = String.fromCharCode(97 + fileIndex);
+        const isWhiteSquare = (rankIndex + fileIndex) % 2 === 0;
+        const isLastMove = lastMoveFrom === square.position || lastMoveTo === square.position;
+
+        return (
+          <SmallSquareCell
+            key={`${file}${rank}-row-${cellRow}`}
+            square={square}
+            isWhiteSquare={isWhiteSquare}
+            isLastMove={isLastMove}
+            cellRow={cellRow}
+          />
+        );
+      })}
+    </Box>
+  );
 }, (prev, next) => {
-  return prev.isWhiteSquare === next.isWhiteSquare &&
-    prev.isLastMove === next.isLastMove &&
-    prev.square.piece?.color === next.square.piece?.color &&
-    prev.square.piece?.type === next.square.piece?.type &&
-    prev.cellRow === next.cellRow;
+  if (prev.rankIndex !== next.rankIndex || prev.cellRow !== next.cellRow) return false;
+  
+  const rank = String(8 - prev.rankIndex);
+  const prevAffectsRank = prev.lastMoveFrom?.[1] === rank || prev.lastMoveTo?.[1] === rank;
+  const nextAffectsRank = next.lastMoveFrom?.[1] === rank || next.lastMoveTo?.[1] === rank;
+  
+  if (prevAffectsRank !== nextAffectsRank) return false;
+  if (nextAffectsRank && (prev.lastMoveFrom !== next.lastMoveFrom || prev.lastMoveTo !== next.lastMoveTo)) return false;
+  
+  return prev.row.every((s, i) => {
+    const ns = next.row[i];
+    return s.piece?.color === ns?.piece?.color && s.piece?.type === ns?.piece?.type;
+  });
 });
 
 interface PixelArtSquareRowProps {
@@ -96,7 +178,6 @@ interface PixelArtSquareRowProps {
 
 const PixelArtSquareRow = memo(function PixelArtSquareRow({ squares, pixelRow, rankIndex, lastMoveFrom, lastMoveTo }: PixelArtSquareRowProps) {
   const PIECE_HEIGHT = 8;
-  console.log(`[PixelArtSquareRow] Render rank=${8-rankIndex} pixelRow=${pixelRow}`, { squaresCount: squares.length, lastMoveFrom, lastMoveTo });
   return (
     <Box flexDirection="row">
       {squares.map((square, fileIndex) => {
@@ -126,16 +207,32 @@ const PixelArtSquareRow = memo(function PixelArtSquareRow({ squares, pixelRow, r
     </Box>
   );
 }, (prev, next) => {
-  return prev.pixelRow === next.pixelRow &&
-    prev.rankIndex === next.rankIndex &&
-    prev.lastMoveFrom === next.lastMoveFrom &&
-    prev.lastMoveTo === next.lastMoveTo &&
-    prev.squares.every((s, i) => {
-      const ns = next.squares[i];
-      return s.position === ns?.position &&
-        s.piece?.color === ns?.piece?.color &&
-        s.piece?.type === ns?.piece?.type;
-    });
+  if (prev.pixelRow !== next.pixelRow || prev.rankIndex !== next.rankIndex) {
+    return false;
+  }
+  
+  const prevRank = 8 - prev.rankIndex;
+  const nextRank = 8 - next.rankIndex;
+  
+  const prevAffectsThisRank = prev.lastMoveFrom?.[1] === String(prevRank) || prev.lastMoveTo?.[1] === String(prevRank);
+  const nextAffectsThisRank = next.lastMoveFrom?.[1] === String(nextRank) || next.lastMoveTo?.[1] === String(nextRank);
+  
+  if (prevAffectsThisRank !== nextAffectsThisRank) {
+    return false;
+  }
+  
+  if (nextAffectsThisRank) {
+    if (prev.lastMoveFrom !== next.lastMoveFrom || prev.lastMoveTo !== next.lastMoveTo) {
+      return false;
+    }
+  }
+  
+  return prev.squares.every((s, i) => {
+    const ns = next.squares[i];
+    return s.position === ns?.position &&
+      s.piece?.color === ns?.piece?.color &&
+      s.piece?.type === ns?.piece?.type;
+  });
 });
 
 interface PixelArtBoardProps {
@@ -256,37 +353,25 @@ function ChessBoard({ fen, lastMove }: ChessBoardProps) {
   }
 
   if (pieceSize === 'small') {
+    const lastMoveFrom = lastMove?.from;
+    const lastMoveTo = lastMove?.to;
+    
     return (
       <Box flexDirection="column">
         {squares.map((row, rankIndex) => {
           const rank = 8 - rankIndex;
           return (
             <Box key={`rank-${rank}`} flexDirection="column">
-              {Array.from({ length: SMALL_CELL_HEIGHT }).map((_, cellRow) => {
-                const isMiddleRow = cellRow === Math.floor(SMALL_CELL_HEIGHT / 2);
-                return (
-                  <Box key={`rank-${rank}-row-${cellRow}`} flexDirection="row">
-                    <Box width={1} justifyContent="center">
-                      {isMiddleRow ? <Text color="gray">{rank}</Text> : <Text> </Text>}
-                    </Box>
-                    {row.map((square, fileIndex) => {
-                      const file = String.fromCharCode(97 + fileIndex);
-                      const isWhiteSquare = (rankIndex + fileIndex) % 2 === 0;
-                      const isLastMove = !!(lastMove && (lastMove.from === square.position || lastMove.to === square.position));
-
-                      return (
-                        <SmallSquareCell
-                          key={`${file}${rank}-row-${cellRow}`}
-                          square={square}
-                          isWhiteSquare={isWhiteSquare}
-                          isLastMove={isLastMove}
-                          cellRow={cellRow}
-                        />
-                      );
-                    })}
-                  </Box>
-                );
-              })}
+              {Array.from({ length: SMALL_CELL_HEIGHT }).map((_, cellRow) => (
+                <SmallBoardRow
+                  key={`rank-${rank}-row-${cellRow}`}
+                  row={row}
+                  rankIndex={rankIndex}
+                  cellRow={cellRow}
+                  lastMoveFrom={lastMoveFrom}
+                  lastMoveTo={lastMoveTo}
+                />
+              ))}
             </Box>
           );
         })}
@@ -302,31 +387,20 @@ function ChessBoard({ fen, lastMove }: ChessBoardProps) {
     );
   }
 
+  const lastMoveFrom = lastMove?.from;
+  const lastMoveTo = lastMove?.to;
+
   return (
     <Box flexDirection="column">
-      {squares.map((row, rankIndex) => {
-        return (
-          <Box key={`rank-${rankIndex}`} flexDirection="row">
-            <Box width={1} justifyContent="center">
-              <Text color="gray">{8 - rankIndex}</Text>
-            </Box>
-            {row.map((square, fileIndex) => {
-            const file = String.fromCharCode(97 + fileIndex);
-            const isWhiteSquare = (rankIndex + fileIndex) % 2 === 0;
-            const isLastMove = !!(lastMove && (lastMove.from === square.position || lastMove.to === square.position));
-
-            return (
-              <CompactSquare
-                key={`${file}${8 - rankIndex}`}
-                square={square}
-                isWhiteSquare={isWhiteSquare}
-                isLastMove={isLastMove}
-              />
-            );
-            })}
-          </Box>
-        );
-      })}
+      {squares.map((row, rankIndex) => (
+        <CompactBoardRow
+          key={`rank-${rankIndex}`}
+          row={row}
+          rankIndex={rankIndex}
+          lastMoveFrom={lastMoveFrom}
+          lastMoveTo={lastMoveTo}
+        />
+      ))}
       <Box flexDirection="row">
         <Box width={1} />
         {'abcdefgh'.split('').map(file => (
