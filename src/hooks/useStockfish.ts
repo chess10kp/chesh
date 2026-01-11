@@ -142,6 +142,10 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
               });
             }
           } else if (line.startsWith('bestmove')) {
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+              timeoutRef.current = null;
+            }
             const moveMatch = line.match(/bestmove (\S+)/);
             if (moveMatch && moveMatch[1]) {
               const bestMove = moveMatch[1];

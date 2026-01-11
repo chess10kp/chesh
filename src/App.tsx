@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, useApp } from 'ink';
+import { Box, useApp, useInput } from 'ink';
 import BroadcastList from './components/BroadcastList.js';
 import RoundsList from './components/RoundsList.js';
 import GamesList from './components/GamesList.js';
@@ -13,6 +13,13 @@ import { BroadcastRound } from './types/index.js';
 
 export default function App() {
   const { exit } = useApp();
+
+  useInput((input, key) => {
+    if (input === 'q' && key.ctrl) {
+      exit();
+    }
+  });
+
   const [viewState, setViewState] = useState<ViewState>('broadcast-list');
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(false);
