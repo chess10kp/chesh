@@ -19,6 +19,19 @@ export interface BroadcastRound {
   finished?: boolean;
 }
 
+export interface LeaderboardPlayer {
+  name: string;
+  title?: string;
+  rating: number;
+  fideId?: number;
+  team?: string;
+  fed?: string;
+  played: number;
+  score: number;
+  ratingDiff?: number;
+  performance?: number;
+}
+
 export interface BroadcastPlayer {
   name: string;
   title?: "GM" | "IM" | "FM" | "WGM" | "WIM" | "WFM" | "NM" | "CM" | "WCM";
@@ -35,6 +48,7 @@ export interface Game {
   fen?: string;
   players: BroadcastPlayer[];
   status?: GameStatus;
+  winner?: 'white' | 'black';
   moves?: string;
   lastMove?: string;
   thinkTime?: number;

@@ -14,8 +14,12 @@ function PlayerInfo({ player, isWhite, isActive }: PlayerInfoProps) {
     <Box flexDirection="column" marginBottom={1}>
       <Box flexDirection="row">
         <Text color={defaultTheme.pieceWhite}>
-          {isWhite ? '⬜' : '⬛'} {player.title || ''} {player.name}
+          {isWhite ? '⬜' : '⬛'}{' '}
         </Text>
+        {player.title && (
+          <Text color="yellow" bold>{player.title} </Text>
+        )}
+        <Text color={defaultTheme.pieceWhite}>{player.name}</Text>
         <Text color="gray"> ({player.rating})</Text>
       </Box>
       {player.clock !== undefined && (

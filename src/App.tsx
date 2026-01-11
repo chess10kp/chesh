@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, useApp, useInput } from 'ink';
 import BroadcastList from './components/BroadcastList.js';
 import RoundsList from './components/RoundsList.js';
-import GamesList from './components/GamesList.js';
+import MultiBoardView from './components/MultiBoardView.js';
 import GameView from './components/GameView.js';
 import Header from './components/Header.js';
 import { ViewState, Broadcast, Game } from './types/index.js';
@@ -157,7 +157,7 @@ export default function App() {
           setLoadingRounds={setLoadingRounds}
         />
       ) : viewState === 'games-list' ? (
-        <GamesList
+        <MultiBoardView
           games={games}
           roundName={roundName}
           onSelectGame={handleSelectGame}

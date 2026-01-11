@@ -55,6 +55,14 @@ function GameListSidebar({
           const isViewed = index === viewedGameIndex;
           const isSelected = index === selectedIndex;
 
+          let statusText = game.status || '';
+          if (game.winner) {
+            const winnerName = game.winner === 'white' ? white?.name : black?.name;
+            statusText = `${winnerName || game.winner} wins`;
+          } else if (game.status === 'draw') {
+            statusText = 'draw';
+          }
+
           return (
             <Box key={game.id || index}>
               <Box
@@ -64,8 +72,8 @@ function GameListSidebar({
               >
                 <Text bold={isViewed}>
                   {truncateText(gameTitle, maxNameWidth)}
-                  {game.status && (
-                    <Text color="gray"> ({game.status})</Text>
+                  {statusText && (
+                    <Text color="gray"> ({statusText})</Text>
                   )}
                 </Text>
               </Box>

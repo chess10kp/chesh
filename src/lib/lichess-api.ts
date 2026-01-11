@@ -1,5 +1,5 @@
 import { readNdjsonStream } from './ndjson-parser.js';
-import { BroadcastRound } from '../types/index.js';
+import { BroadcastRound, LeaderboardPlayer } from '../types/index.js';
 
 const LICHESS_API_URL = 'https://lichess.org/api';
 
@@ -46,6 +46,32 @@ export async function fetchBroadcastRounds(
 
   const data = await response.json();
   return data.rounds || [];
+}
+
+export async function fetchBroadcastLeaderboard(
+  broadcastId: string,
+  token?: string
+): Promise<LeaderboardPlayer[]> {
+  const headers: HeadersInit = {
+    'Accept': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`https://lichess.org/broadcast/${broadcastId}/players`, {
+    headers,
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return [];
+    }
+    throw new Error(`Failed to fetch leaderboard: ${response.status}`);
+  }
+
+  return await response.json();
 }
 
 export async function streamRoundPGN(

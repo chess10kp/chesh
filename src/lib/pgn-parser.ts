@@ -41,6 +41,7 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }, index: number)
 
   let fen: string | undefined;
   let status: 'started' | 'playing' | 'aborted' | 'mate' | 'draw' | 'resign' | 'stalemate' | 'timeout' | 'outoftime' = 'started';
+  let winner: 'white' | 'black' | undefined;
   const fenHistory: string[] = [];
   const moveHistory: (string | undefined)[] = [undefined];
 
@@ -75,8 +76,12 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }, index: number)
       const result = tags.Result;
       if (result === '1/2-1/2') {
         status = 'draw';
-      } else if (result === '1-0' || result === '0-1') {
-        status = 'resign';
+      } else if (result === '1-0') {
+        if (status === 'started') status = 'resign';
+        winner = 'white';
+      } else if (result === '0-1') {
+        if (status === 'started') status = 'resign';
+        winner = 'black';
       } else if (result === '*' && status === 'started') {
         status = 'playing';
       }
@@ -95,6 +100,7 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }, index: number)
     players,
     fen,
     status,
+    winner,
     pgn: pgnText,
     fenHistory,
     moveHistory,

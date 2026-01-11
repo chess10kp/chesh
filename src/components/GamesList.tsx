@@ -28,7 +28,7 @@ export default function GamesList({
     const LOCAL_HEADER_HEIGHT = 1;
     const SUBHEADER_HEIGHT = 2;
     const PADDING = 2;
-    const HELPBAR_HEIGHT = 3;
+    const HELPBAR_HEIGHT = 1;
     return Math.max(5, terminalHeight - APP_HEADER_HEIGHT - LOCAL_HEADER_HEIGHT - SUBHEADER_HEIGHT - PADDING - HELPBAR_HEIGHT);
   }, [terminalHeight]);
 

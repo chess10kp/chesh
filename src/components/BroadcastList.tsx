@@ -23,7 +23,7 @@ export default function BroadcastList({ onSelectBroadcast, setLoading, onQuit }:
     const APP_HEADER_HEIGHT = 4; // border (2) + text (1) + marginBottom (1)
     const LOCAL_HEADER_HEIGHT = 1;
     const PADDING = 2;
-    const HELPBAR_HEIGHT = 3;
+    const HELPBAR_HEIGHT = 1;
     return Math.max(5, terminalHeight - APP_HEADER_HEIGHT - LOCAL_HEADER_HEIGHT - PADDING - HELPBAR_HEIGHT);
   }, [terminalHeight]);
 
