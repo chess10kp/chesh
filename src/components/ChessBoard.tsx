@@ -6,8 +6,7 @@ import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
 const CELL_WIDTH = 8;
 const PIXEL_ART_CELL_WIDTH = 18;
-const SMALL_CELL_WIDTH = 4;
-const SMALL_CELL_HEIGHT = 1;
+const SMALL_CELL_WIDTH = 3;
 
 interface ChessBoardProps {
   fen: string;
@@ -90,73 +89,43 @@ const CompactBoardRow = memo(function CompactBoardRow({ row, rankIndex, lastMove
   });
 });
 
-interface SmallSquareCellProps {
-  square: Square;
-  isWhiteSquare: boolean;
-  isLastMove: boolean;
-  cellRow: number;
-}
-
-function SmallSquareCell({ square, isWhiteSquare, isLastMove, cellRow }: SmallSquareCellProps) {
-  const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
-  const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
-  const isMiddleRow = cellRow === Math.floor(SMALL_CELL_HEIGHT / 2);
-
-  let content = ' '.repeat(SMALL_CELL_WIDTH);
-  if (isMiddleRow && square.piece) {
-    const symbol = getPieceSymbol(square.piece.color, square.piece.type, 'small');
-    // Symbol width: black pawn with FE0E + space = 2 chars, others = 1 wide char (2 cells)
-    const symbolWidth = 2;
-    const padding = Math.floor((SMALL_CELL_WIDTH - symbolWidth) / 2);
-    content = ' '.repeat(padding) + symbol + ' '.repeat(SMALL_CELL_WIDTH - padding - symbolWidth);
-  }
-
-  return (
-    <Box
-      width={SMALL_CELL_WIDTH}
-      backgroundColor={isLastMove ? defaultTheme.highlight : bgColor}
-    >
-      <Text color={pieceColor}>{content}</Text>
-    </Box>
-  );
-}
-
 interface SmallBoardRowProps {
   row: Square[];
   rankIndex: number;
-  cellRow: number;
   lastMoveFrom?: string;
   lastMoveTo?: string;
 }
 
-const SmallBoardRow = memo(function SmallBoardRow({ row, rankIndex, cellRow, lastMoveFrom, lastMoveTo }: SmallBoardRowProps) {
+const SmallBoardRow = memo(function SmallBoardRow({ row, rankIndex, lastMoveFrom, lastMoveTo }: SmallBoardRowProps) {
   const rank = 8 - rankIndex;
-  const isMiddleRow = cellRow === Math.floor(SMALL_CELL_HEIGHT / 2);
   
   return (
     <Box flexDirection="row">
       <Box width={1} justifyContent="center">
-        {isMiddleRow ? <Text color="gray">{rank}</Text> : <Text> </Text>}
+        <Text color="gray">{rank}</Text>
       </Box>
       {row.map((square, fileIndex) => {
-        const file = String.fromCharCode(97 + fileIndex);
         const isWhiteSquare = (rankIndex + fileIndex) % 2 === 0;
+        const bgColor = isWhiteSquare ? rgbToInkColor(defaultTheme.boardWhite) : rgbToInkColor(defaultTheme.boardBlack);
         const isLastMove = lastMoveFrom === square.position || lastMoveTo === square.position;
+        
+        let content = ' ';
+        if (square.piece) {
+          content = getPieceSymbol(square.piece.color, square.piece.type, 'small');
+        }
+        
+        const pieceColor = square.piece?.color === 'white' ? defaultTheme.pieceWhite : defaultTheme.pieceBlack;
 
         return (
-          <SmallSquareCell
-            key={`${file}${rank}-row-${cellRow}`}
-            square={square}
-            isWhiteSquare={isWhiteSquare}
-            isLastMove={isLastMove}
-            cellRow={cellRow}
-          />
+          <Box key={square.position} width={SMALL_CELL_WIDTH} backgroundColor={isLastMove ? defaultTheme.highlight : bgColor}>
+            <Text color={pieceColor}>{content}</Text>
+          </Box>
         );
       })}
     </Box>
   );
 }, (prev, next) => {
-  if (prev.rankIndex !== next.rankIndex || prev.cellRow !== next.cellRow) return false;
+  if (prev.rankIndex !== next.rankIndex) return false;
   
   const rank = String(8 - prev.rankIndex);
   const prevAffectsRank = prev.lastMoveFrom?.[1] === rank || prev.lastMoveTo?.[1] === rank;
@@ -364,18 +333,13 @@ function ChessBoard({ fen, lastMove }: ChessBoardProps) {
         {squares.map((row, rankIndex) => {
           const rank = 8 - rankIndex;
           return (
-            <Box key={`rank-${rank}`} flexDirection="column">
-              {Array.from({ length: SMALL_CELL_HEIGHT }).map((_, cellRow) => (
-                <SmallBoardRow
-                  key={`rank-${rank}-row-${cellRow}`}
-                  row={row}
-                  rankIndex={rankIndex}
-                  cellRow={cellRow}
-                  lastMoveFrom={lastMoveFrom}
-                  lastMoveTo={lastMoveTo}
-                />
-              ))}
-            </Box>
+            <SmallBoardRow
+              key={`rank-${rank}`}
+              row={row}
+              rankIndex={rankIndex}
+              lastMoveFrom={lastMoveFrom}
+              lastMoveTo={lastMoveTo}
+            />
           );
         })}
         <Box flexDirection="row">

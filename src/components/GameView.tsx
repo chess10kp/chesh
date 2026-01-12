@@ -10,16 +10,6 @@ import HelpBar from './HelpBar.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { addFavorite } from '../lib/cache.js';
 
-function simpleHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return hash;
-}
-
 type FocusArea = 'board' | 'sidebar';
 
 interface GameViewProps {
@@ -94,8 +84,6 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
     [game.moveHistory, currentMoveIndex]
   );
 
-  const boardKey = useMemo(() => currentFEN ? `board-${simpleHash(currentFEN)}` : 'board', [currentFEN]);
-
   useInput((input, key) => {
     if (input === 'q') {
       onBack();
@@ -148,7 +136,7 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
               paddingX={2}
             >
               {currentFEN && (
-                <ChessBoard key={boardKey} fen={currentFEN} lastMove={lastMove} />
+                <ChessBoard fen={currentFEN} lastMove={lastMove} />
               )}
             </Box>
             {whitePlayer && (
@@ -176,7 +164,7 @@ export default function GameView({ game, games, onBack, onGameSelect }: GameView
               marginX={1}
             >
               {currentFEN && (
-                <ChessBoard key={boardKey} fen={currentFEN} lastMove={lastMove} />
+                <ChessBoard fen={currentFEN} lastMove={lastMove} />
               )}
             </Box>
 

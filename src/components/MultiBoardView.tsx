@@ -14,7 +14,7 @@ interface MultiBoardViewProps {
   onBack: () => void;
 }
 
-const MINI_BOARD_WIDTH = 17;
+const MINI_BOARD_WIDTH = 25;
 const BOARD_PADDING = 2;
 const MIN_WIDTH_FOR_MULTI_BOARD = 60;
 const MIN_HEIGHT_FOR_MULTI_BOARD = 20;
@@ -56,14 +56,14 @@ function GameCard({
       paddingX={1}
     >
       <Box flexDirection="row" justifyContent="space-between">
-        <Text color={defaultTheme.pieceWhite} bold>{whiteName}</Text>
+        <Text color={defaultTheme.text} bold>{whiteName}</Text>
         <Text color="gray">{white?.rating || ''}</Text>
       </Box>
       
       <MiniBoard fen={game.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'} />
       
       <Box flexDirection="row" justifyContent="space-between">
-        <Text color={defaultTheme.pieceBlack} bold>{blackName}</Text>
+        <Text color={defaultTheme.text} bold>{blackName}</Text>
         <Text color="gray">{black?.rating || ''}</Text>
       </Box>
       

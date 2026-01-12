@@ -88,8 +88,8 @@ function MiniBoard({ fen, showLabels = false }: MiniBoardProps) {
                 : defaultTheme.pieceBlack;
 
               return (
-                <Box key={square.position} width={2} backgroundColor={bgColor}>
-                  <Text color={pieceColor}>{content} </Text>
+                <Box key={square.position} width={3} backgroundColor={bgColor}>
+                  <Text color={pieceColor}>{content}</Text>
                 </Box>
               );
             })}
@@ -100,8 +100,8 @@ function MiniBoard({ fen, showLabels = false }: MiniBoardProps) {
         <Box flexDirection="row">
           <Box width={1} />
           {'abcdefgh'.split('').map(file => (
-            <Box key={file} width={2}>
-              <Text color="gray" dimColor>{file} </Text>
+            <Box key={file} width={3}>
+              <Text color="gray" dimColor>{file}</Text>
             </Box>
           ))}
         </Box>

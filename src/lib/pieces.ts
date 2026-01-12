@@ -49,25 +49,34 @@ export const PIECE_GRIDS: Record<PieceColor, Record<PieceType, string[][]>> = {
   },
 };
 
+const NARROW = "\uFE0E"
+const RESET = "\x1b[0m"
+
+const PIECE_MAP = {
+    "P": `\u265F${NARROW}${RESET}`,
+    "p": `\u265F${NARROW}${RESET}`,
+}
+
+
 export const PIECE_SYMBOLS: Record<PieceColor, Record<PieceType, string>> = {
   white: {
-    king: '♔',
-    queen: '♕',
-    rook: '♖',
-    bishop: '♗',
-    knight: '♘',
-    pawn: '♙',
+    king: ' ♚\u2002',
+    queen: ' ♛\u2002',
+    rook: ' ♜\u2002',
+    bishop: ' ♝\u2002',
+    knight: ' ♞\u2002',
+    pawn: ` ${ PIECE_MAP["P"] }`,
   },
   black: {
-    king: '♚',
-    queen: '♛',
-    rook: '♜',
-    bishop: '♝',
-    knight: '♞',
-    pawn: '♟',
+    king: ' ♚\u2002',
+    queen: ' ♛\u2002',
+    rook: ' ♜\u2002',
+    bishop: ' ♝\u2002',
+    knight: ' ♞\u2002',
+    pawn: ` ${PIECE_MAP["p"]}`,
   },
 };
-
+    
 export const COMPACT_PIECES: Record<PieceColor, Record<PieceType, string>> = {
   white: {
     king: '\n    ✚   \n   ███  ',
