@@ -21,6 +21,7 @@ process.on('SIGTERM', () => {
 try {
   render(<App />, {
     patchConsole: false,
+    incrementalRendering: true,
   });
 } catch (error: any) {
   restoreScreen();
