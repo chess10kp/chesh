@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 
-const CONFIG_PATH = path.join(os.homedir(), '.check.sh', 'config.json');
+const CONFIG_PATH = path.join(os.homedir(), '.chesh', 'config.json');
 
 export interface Config {
   api: {
@@ -29,7 +29,7 @@ const DEFAULT_CONFIG: Config = {
   },
   cache: {
     enabled: true,
-    path: path.join(os.homedir(), '.check.sh', 'cache'),
+    path: path.join(os.homedir(), '.chesh', 'cache'),
     duration: 86400000,
   },
   theme: 'default',

@@ -6,7 +6,7 @@ import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
 const CELL_WIDTH = 8;
 const PIXEL_ART_CELL_WIDTH = 18;
-const SMALL_CELL_WIDTH = 3;
+const SMALL_CELL_WIDTH = 4;
 
 interface ChessBoardProps {
   fen: string;
@@ -363,17 +363,14 @@ function ChessBoard({ fen, lastMove, flipped = false, cursorSquare, selectedSqua
   const { width: terminalWidth, height: terminalHeight } = useTerminalSize(150);
 
   const pieceSize = useMemo((): PieceSize => {
-    // Medium (compact) board minimum: 75 columns, 27 rows
-    // - 1 char rank label + 8 squares × 8 chars = 65 columns, plus padding
-    // - 8 ranks × 3 lines per rank (compact pieces) + 3 file label rows = 27 lines
+    // Height thresholds account for app chrome: header (4) + helpbar (3) + player info (4) + padding (4) = ~15 lines
+    // Medium (compact) board: 8 ranks × 3 lines + 1 file label = 25 lines. Total: 40
     const COMPACT_MIN_WIDTH = 75;
-    const COMPACT_MIN_HEIGHT = 27;
+    const COMPACT_MIN_HEIGHT = 40;
 
-    // Large (pixel-art) board minimum: 155 columns, 64 rows
-    // - 1 char rank label + 8 squares × 18 chars = 145 columns, plus padding
-    // - 8 ranks × 8 lines per rank (pixel art) + 2 file label rows = 66 lines
+    // Large (pixel-art) board: 8 ranks × 8 lines + 1 file label = 65 lines. Total: 80
     const PIXEL_ART_MIN_WIDTH = 155;
-    const PIXEL_ART_MIN_HEIGHT = 64;
+    const PIXEL_ART_MIN_HEIGHT = 80;
 
     // Check if terminal is large enough for pixel-art board
     if (terminalWidth >= PIXEL_ART_MIN_WIDTH && terminalHeight >= PIXEL_ART_MIN_HEIGHT) {

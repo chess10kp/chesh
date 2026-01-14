@@ -1,10 +1,10 @@
 {
-	"name": "check.sh",
+	"name": "chesh",
 	"version": "0.0.1",
 	"description": "TUI for viewing live chess games from Lichess broadcasts",
 	"license": "MIT",
-	"bin":  {
-    "check.sh": "dist/index.js"
+  "bin":  {
+    "chesh": "dist/index.js"
   },
 	"type": "module",
 	"engines": {

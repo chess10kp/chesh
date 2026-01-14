@@ -7,7 +7,7 @@ export interface CacheEntry<T> {
   timestamp: number;
 }
 
-const CACHE_DIR = path.join(os.homedir(), '.check.sh', 'cache');
+const CACHE_DIR = path.join(os.homedir(), '.chesh', 'cache');
 
 export async function getCache<T>(
   key: string,

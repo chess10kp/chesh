@@ -180,8 +180,9 @@ export default function GameView({
 
   const { width: terminalWidth, height: terminalHeight } = useTerminalSize(150);
   const isCompactMode = useMemo(() => {
+    // Must match ChessBoard thresholds (accounting for app chrome)
     const COMPACT_MIN_WIDTH = 75;
-    const COMPACT_MIN_HEIGHT = 27;
+    const COMPACT_MIN_HEIGHT = 40;
     return (
       terminalWidth < COMPACT_MIN_WIDTH || terminalHeight < COMPACT_MIN_HEIGHT
     );
@@ -433,21 +434,31 @@ export default function GameView({
                 isActive={game.status === "playing"}
               />
             )}
-            <Box flexDirection="column" paddingX={2}>
-              {analysis.state.isAnalyzing && (
-                <Box justifyContent="center">
-                  <Text color="magenta" bold>ANALYSIS MODE</Text>
-                </Box>
-              )}
-              {currentFEN && (
-                <ChessBoard 
-                  fen={currentFEN} 
-                  lastMove={lastMove} 
-                  flipped={flipped}
-                  cursorSquare={analysis.state.isAnalyzing ? analysis.state.cursorSquare : undefined}
-                  selectedSquare={analysis.state.isAnalyzing ? analysis.state.selectedSquare ?? undefined : undefined}
+            <Box flexDirection="row">
+              <Box flexDirection="column" paddingX={1}>
+                {analysis.state.isAnalyzing && (
+                  <Box justifyContent="center">
+                    <Text color="magenta" bold>ANALYSIS MODE</Text>
+                  </Box>
+                )}
+                {currentFEN && (
+                  <ChessBoard
+                    fen={currentFEN}
+                    lastMove={lastMove}
+                    flipped={flipped}
+                    cursorSquare={analysis.state.isAnalyzing ? analysis.state.cursorSquare : undefined}
+                    selectedSquare={analysis.state.isAnalyzing ? analysis.state.selectedSquare ?? undefined : undefined}
+                  />
+                )}
+              </Box>
+              <Box marginTop={1} marginLeft={1}>
+                <MoveHistory
+                  moves={displayMoves}
+                  currentMoveIndex={currentMoveIndex}
+                  analysisStartIndex={analysis.state.analysisStartIndex}
+                  height={12}
                 />
-              )}
+              </Box>
             </Box>
             {(flipped ? blackPlayer : whitePlayer) && (
               <PlayerInfo
