@@ -1,13 +1,13 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
-import { Game, LeaderboardPlayer } from '../types/index.js';
-import { defaultTheme } from '../lib/themes.js';
-import { useTerminalSize } from '../hooks/useTerminalSize.js';
-import MiniBoard from './MiniBoard.js';
-import HelpBar from './HelpBar.js';
-import ScrollView, { truncateText } from './ScrollView.js';
-import { formatBroadcastGameUrl } from '../lib/open-url.js';
-import { fetchBroadcastLeaderboard } from '../lib/lichess-api.js';
+import { useState, useMemo, useEffect, memo } from "react";
+import { Box, Text, useInput } from "ink";
+import { Game, LeaderboardPlayer } from "../types/index.js";
+import { defaultTheme } from "../lib/themes.js";
+import { useTerminalSize } from "../hooks/useTerminalSize.js";
+import MiniBoard from "./MiniBoard.js";
+import HelpBar from "./HelpBar.js";
+import ScrollView, { truncateText } from "./ScrollView.js";
+import { formatBroadcastGameUrl } from "../lib/open-url.js";
+import { fetchBroadcastLeaderboard } from "../lib/lichess-api.js";
 
 interface MultiBoardViewProps {
   games: Game[];
@@ -25,59 +25,87 @@ const BOARD_PADDING = 2;
 const MIN_WIDTH_FOR_MULTI_BOARD = 60;
 const MIN_HEIGHT_FOR_MULTI_BOARD = 20;
 
+const GameCardContent = memo(
+  ({
+    game,
+    maxNameWidth,
+  }: {
+    game: Game;
+    maxNameWidth: number;
+  }) => {
+    const white = game.players[0];
+    const black = game.players[1];
+
+    const whiteName = truncateText(
+      `${white?.title ? white.title + " " : ""}${white?.name || "?"}`,
+      maxNameWidth
+    );
+    const blackName = truncateText(
+      `${black?.title ? black.title + " " : ""}${black?.name || "?"}`,
+      maxNameWidth
+    );
+
+    const resultText =
+      game.status === "mate" || game.status === "resign"
+        ? game.winner === "white"
+          ? "1-0"
+          : "0-1"
+        : game.status === "draw" || game.status === "stalemate"
+        ? "½-½"
+        : game.status === "playing" || game.status === "started"
+        ? "..."
+        : "";
+
+    return (
+      <>
+        <Box flexDirection="row" justifyContent="space-between">
+          <Text color={defaultTheme.text} bold>
+            {whiteName}
+          </Text>
+          <Text color="gray">{white?.rating || ""}</Text>
+        </Box>
+
+        <MiniBoard
+          fen={game.fen || "rnbqkbnr/pppppppp/8/8/8/PPPPPPPP/RNBQKBNR"}
+        />
+
+        <Box flexDirection="row" justifyContent="space-between">
+          <Text color={defaultTheme.text} bold>
+            {blackName}
+          </Text>
+          <Text color="gray">{black?.rating || ""}</Text>
+        </Box>
+
+        {resultText && (
+          <Box justifyContent="center">
+            <Text color={defaultTheme.accent}>{resultText}</Text>
+          </Box>
+        )}
+      </>
+    );
+  },
+  (prev, current) => {
+    return prev.game.id === current.game.id;
+  }
+);
+
 function GameCard({
   game,
   isSelected,
-  maxNameWidth
+  maxNameWidth,
 }: {
   game: Game;
   isSelected: boolean;
   maxNameWidth: number;
 }) {
-  const white = game.players[0];
-  const black = game.players[1];
-
-  const whiteName = truncateText(
-    `${white?.title ? white.title + ' ' : ''}${white?.name || '?'}`,
-    maxNameWidth
-  );
-  const blackName = truncateText(
-    `${black?.title ? black.title + ' ' : ''}${black?.name || '?'}`,
-    maxNameWidth
-  );
-
-  const resultText = game.status === 'mate' || game.status === 'resign'
-    ? (game.winner === 'white' ? '1-0' : '0-1')
-    : game.status === 'draw' || game.status === 'stalemate'
-    ? '½-½'
-    : game.status === 'playing' || game.status === 'started'
-    ? '...'
-    : '';
-
   return (
     <Box
       flexDirection="column"
-      borderStyle={isSelected ? 'bold' : 'single'}
-      borderColor={isSelected ? defaultTheme.accent : 'gray'}
+      borderStyle={isSelected ? "bold" : "single"}
+      borderColor={isSelected ? defaultTheme.accent : "gray"}
       paddingX={1}
     >
-      <Box flexDirection="row" justifyContent="space-between">
-        <Text color={defaultTheme.text} bold>{whiteName}</Text>
-        <Text color="gray">{white?.rating || ''}</Text>
-      </Box>
-
-      <MiniBoard fen={game.fen || 'rnbqkbnr/pppppppp/8/8/8/PPPPPPPP/RNBQKBNR'} />
-
-      <Box flexDirection="row" justifyContent="space-between">
-        <Text color={defaultTheme.text} bold>{blackName}</Text>
-        <Text color="gray">{black?.rating || ''}</Text>
-      </Box>
-
-      {resultText && (
-        <Box justifyContent="center">
-          <Text color={defaultTheme.accent}>{resultText}</Text>
-        </Box>
-      )}
+      <GameCardContent game={game} maxNameWidth={maxNameWidth} />
     </Box>
   );
 }
@@ -86,7 +114,7 @@ function ListView({
   games,
   selectedIndex,
   scrollViewHeight,
-  maxNameWidth
+  maxNameWidth,
 }: {
   games: Game[];
   selectedIndex: number;
@@ -99,24 +127,27 @@ function ListView({
         const white = game.players[0];
         const black = game.players[1];
         const gameTitle = truncateText(
-          `${white?.name || '?'} vs ${black?.name || '?'}`,
+          `${white?.name || "?"} vs ${black?.name || "?"}`,
           maxNameWidth
         );
 
         return (
           <Box
             key={game.id || index}
-            backgroundColor={index === selectedIndex ? defaultTheme.highlight : undefined}
+            backgroundColor={
+              index === selectedIndex ? defaultTheme.highlight : undefined
+            }
             paddingX={1}
           >
             <Text>
-              {index === selectedIndex ? '▶ ' : '  '}
+              {index === selectedIndex ? "▶ " : "  "}
               {gameTitle}
-              {game.status && (
-                <Text color="gray">  ({game.status})</Text>
-              )}
+              {game.status && <Text color="gray"> ({game.status})</Text>}
               {game.fen && (
-                <Text color="gray" dimColor> ✓</Text>
+                <Text color="gray" dimColor>
+                  {" "}
+                  ✓
+                </Text>
               )}
             </Text>
           </Box>
@@ -128,7 +159,7 @@ function ListView({
 
 function StandingsView({
   leaderboard,
-  scrollViewHeight
+  scrollViewHeight,
 }: {
   leaderboard: LeaderboardPlayer[];
   scrollViewHeight: number;
@@ -140,15 +171,23 @@ function StandingsView({
   }, [leaderboard]);
 
   const visibleCount = scrollViewHeight - 2;
-  const visiblePlayers = sortedLeaderboard.slice(scrollTop, scrollTop + visibleCount);
+  const visiblePlayers = sortedLeaderboard.slice(
+    scrollTop,
+    scrollTop + visibleCount
+  );
   const canScrollUp = scrollTop > 0;
   const canScrollDown = scrollTop + visibleCount < sortedLeaderboard.length;
 
   useInput((input, key) => {
-    if (key.upArrow || input === 'k') {
+    if (key.upArrow || input === "k") {
       setScrollTop(Math.max(0, scrollTop - 1));
-    } else if (key.downArrow || input === 'j') {
-      setScrollTop(Math.max(0, Math.min(sortedLeaderboard.length - visibleCount, scrollTop + 1)));
+    } else if (key.downArrow || input === "j") {
+      setScrollTop(
+        Math.max(
+          0,
+          Math.min(sortedLeaderboard.length - visibleCount, scrollTop + 1)
+        )
+      );
     }
   });
 
@@ -163,10 +202,10 @@ function StandingsView({
     <Box flexDirection="column" height={scrollViewHeight}>
       <Box>
         <Text dimColor>
-          <Text>{' # '}</Text>
-          <Text>{'Player'.padEnd(18)}</Text>
-          <Text>{'Pts'.padStart(4)}</Text>
-          <Text>{'Elo'.padStart(5)}</Text>
+          <Text>{" # "}</Text>
+          <Text>{"Player".padEnd(18)}</Text>
+          <Text>{"Pts".padStart(4)}</Text>
+          <Text>{"Elo".padStart(5)}</Text>
         </Text>
       </Box>
       {canScrollUp && (
@@ -178,11 +217,19 @@ function StandingsView({
         {visiblePlayers.map((player, idx) => (
           <Box key={player.fideId || player.name}>
             <Text>
-              <Text color="gray">{(scrollTop + idx + 1).toString().padStart(2)}.</Text>
+              <Text color="gray">
+                {(scrollTop + idx + 1).toString().padStart(2)}.
+              </Text>
               <Text> </Text>
               {player.title && <Text color="yellow">{player.title} </Text>}
-              <Text>{player.name.slice(0, player.title ? 14 : 17).padEnd(player.title ? 14 : 17)}</Text>
-              <Text bold color="green">{formatScore(player.score).padStart(4)}</Text>
+              <Text>
+                {player.name
+                  .slice(0, player.title ? 14 : 17)
+                  .padEnd(player.title ? 14 : 17)}
+              </Text>
+              <Text bold color="green">
+                {formatScore(player.score).padStart(4)}
+              </Text>
               <Text color="cyan">{player.rating.toString().padStart(5)}</Text>
             </Text>
           </Box>
@@ -197,7 +244,7 @@ function StandingsView({
   );
 }
 
-export default function MultiBoardView({
+function MultiBoardView({
   games,
   roundName,
   onSelectGame,
@@ -209,13 +256,17 @@ export default function MultiBoardView({
 }: MultiBoardViewProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [forceListView, setForceListView] = useState(false);
-  const [focusedPanel, setFocusedPanel] = useState<'games' | 'standings'>('games');
+  const [focusedPanel, setFocusedPanel] = useState<"games" | "standings">(
+    "games"
+  );
   const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
   const { width: terminalWidth, height: terminalHeight } = useTerminalSize(150);
 
   const canUseMultiBoardLayout = useMemo(() => {
-    return terminalWidth >= MIN_WIDTH_FOR_MULTI_BOARD &&
-           terminalHeight >= MIN_HEIGHT_FOR_MULTI_BOARD;
+    return (
+      terminalWidth >= MIN_WIDTH_FOR_MULTI_BOARD &&
+      terminalHeight >= MIN_HEIGHT_FOR_MULTI_BOARD
+    );
   }, [terminalWidth, terminalHeight]);
 
   useEffect(() => {
@@ -237,7 +288,10 @@ export default function MultiBoardView({
   const boardsPerRow = useMemo(() => {
     if (!useMultiBoardLayout) return 1;
     const availableWidth = terminalWidth - 4;
-    return Math.max(1, Math.floor(availableWidth / (MINI_BOARD_WIDTH + BOARD_PADDING)));
+    return Math.max(
+      1,
+      Math.floor(availableWidth / (MINI_BOARD_WIDTH + BOARD_PADDING))
+    );
   }, [terminalWidth, useMultiBoardLayout]);
 
   const scrollViewHeight = useMemo(() => {
@@ -246,7 +300,15 @@ export default function MultiBoardView({
     const SUBHEADER_HEIGHT = 2;
     const PADDING = 2;
     const HELPBAR_HEIGHT = 1;
-    return Math.max(5, terminalHeight - APP_HEADER_HEIGHT - LOCAL_HEADER_HEIGHT - SUBHEADER_HEIGHT - PADDING - HELPBAR_HEIGHT);
+    return Math.max(
+      5,
+      terminalHeight -
+        APP_HEADER_HEIGHT -
+        LOCAL_HEADER_HEIGHT -
+        SUBHEADER_HEIGHT -
+        PADDING -
+        HELPBAR_HEIGHT
+    );
   }, [terminalHeight]);
 
   const firstRowGames = useMemo(() => {
@@ -256,70 +318,80 @@ export default function MultiBoardView({
 
   const hasMoreGames = games.length > boardsPerRow;
 
-  const showStandings = focusedPanel === 'standings' && leaderboard.length > 0;
+  const showStandings = focusedPanel === "standings" && leaderboard.length > 0;
 
   useInput((input, key) => {
-    if (key.tab || input === '\t') {
+    if (key.tab || input === "\t") {
       if (leaderboard.length > 0) {
-        setFocusedPanel(prev => prev === 'games' ? 'standings' : 'games');
+        setFocusedPanel((prev) => (prev === "games" ? "standings" : "games"));
       }
       return;
     }
 
     if (showStandings) {
-      if (key.escape || input === 'q') {
+      if (key.escape || input === "q") {
         onBack();
       }
       return;
     }
 
     if (useMultiBoardLayout) {
-      if (key.leftArrow || input === 'h') {
+      if (key.leftArrow || input === "h") {
         if (selectedIndex > 0) {
           setSelectedIndex(selectedIndex - 1);
         }
-      } else if (key.rightArrow || input === 'l') {
+      } else if (key.rightArrow || input === "l") {
         if (selectedIndex < firstRowGames.length - 1) {
           setSelectedIndex(selectedIndex + 1);
         }
-      } else if (input === 't') {
-        setForceListView(v => !v);
+      } else if (input === "t") {
+        setForceListView((v) => !v);
       } else if (key.return) {
         const selectedGame = firstRowGames[selectedIndex];
         if (selectedGame) {
           onSelectGame(selectedGame);
         }
-      } else if (key.escape || input === 'q') {
+      } else if (key.escape || input === "q") {
         onBack();
-      } else if ((input === 'o' || input === 'O') && onOpen) {
+      } else if ((input === "o" || input === "O") && onOpen) {
         const selectedGame = firstRowGames[selectedIndex];
         if (selectedGame?.id) {
-          const url = tournamentName && roundSlug
-            ? formatBroadcastGameUrl(tournamentName, roundSlug, selectedGame.id)
-            : `https://lichess.org/${selectedGame.id}`;
+          const url =
+            tournamentName && roundSlug
+              ? formatBroadcastGameUrl(
+                  tournamentName,
+                  roundSlug,
+                  selectedGame.id
+                )
+              : `https://lichess.org/${selectedGame.id}`;
           onOpen(url);
         }
       }
     } else {
-      if (key.upArrow || input === 'k') {
-        setSelectedIndex(i => Math.max(0, i - 1));
-      } else if (key.downArrow || input === 'j') {
-        setSelectedIndex(i => Math.min(games.length - 1, i + 1));
-      } else if (input === 't' && canUseMultiBoardLayout) {
-        setForceListView(v => !v);
+      if (key.upArrow || input === "k") {
+        setSelectedIndex((i) => Math.max(0, i - 1));
+      } else if (key.downArrow || input === "j") {
+        setSelectedIndex((i) => Math.min(games.length - 1, i + 1));
+      } else if (input === "t" && canUseMultiBoardLayout) {
+        setForceListView((v) => !v);
       } else if (key.return) {
         const selectedGame = games[selectedIndex];
         if (selectedGame) {
           onSelectGame(selectedGame);
         }
-      } else if (key.escape || input === 'q') {
+      } else if (key.escape || input === "q") {
         onBack();
-      } else if ((input === 'o' || input === 'O') && onOpen) {
+      } else if ((input === "o" || input === "O") && onOpen) {
         const selectedGame = games[selectedIndex];
         if (selectedGame?.id) {
-          const url = tournamentName && roundSlug
-            ? formatBroadcastGameUrl(tournamentName, roundSlug, selectedGame.id)
-            : `https://lichess.org/${selectedGame.id}`;
+          const url =
+            tournamentName && roundSlug
+              ? formatBroadcastGameUrl(
+                  tournamentName,
+                  roundSlug,
+                  selectedGame.id
+                )
+              : `https://lichess.org/${selectedGame.id}`;
           onOpen(url);
         }
       }
@@ -331,7 +403,9 @@ export default function MultiBoardView({
   if (games.length === 0) {
     return (
       <Box flexDirection="column" height="100%" padding={1}>
-        <Text bold color={defaultTheme.accent}>{roundName}</Text>
+        <Text bold color={defaultTheme.accent}>
+          {roundName}
+        </Text>
         <Box padding={1}>
           <Text color="yellow">No games found in PGN</Text>
         </Box>
@@ -344,19 +418,26 @@ export default function MultiBoardView({
   return (
     <Box flexDirection="column" height="100%" padding={1}>
       <Box flexDirection="column" flexGrow={1}>
-        <Text bold color={defaultTheme.accent}>{roundName}</Text>
+        <Text bold color={defaultTheme.accent}>
+          {roundName}
+        </Text>
         <Box marginBottom={1}>
           <Text color="gray">
-            {games.length} game{games.length !== 1 ? 's' : ''}
+            {games.length} game{games.length !== 1 ? "s" : ""}
           </Text>
         </Box>
 
         {showStandings ? (
           <Box flexDirection="column" overflow="hidden">
             <Box marginBottom={1}>
-              <Text bold color={defaultTheme.accent}>Tournament Standings</Text>
+              <Text bold color={defaultTheme.accent}>
+                Tournament Standings
+              </Text>
             </Box>
-            <StandingsView leaderboard={leaderboard} scrollViewHeight={scrollViewHeight} />
+            <StandingsView
+              leaderboard={leaderboard}
+              scrollViewHeight={scrollViewHeight}
+            />
           </Box>
         ) : useMultiBoardLayout ? (
           <Box flexDirection="column" overflow="hidden">
@@ -373,7 +454,8 @@ export default function MultiBoardView({
             {hasMoreGames && (
               <Box marginTop={1}>
                 <Text color="gray">
-                  Showing {firstRowGames.length} of {games.length} games. Press [t] for all games.
+                  Showing {firstRowGames.length} of {games.length} games. Press
+                  [t] for all games.
                 </Text>
               </Box>
             )}
@@ -392,10 +474,24 @@ export default function MultiBoardView({
           showStandings
             ? "[↑/k] Scroll  [↓/j] Scroll  [Tab] Games  [q/Esc] Back"
             : useMultiBoardLayout
-            ? `[←/h] [→/l] Navigate  [Enter] Select  [o] Open  [t] List View  ${leaderboard.length > 0 ? '[Tab] Standings  ' : ''}[q/Esc] Back`
-            : `[↑/k] Up  [↓/j] Down  [Enter] Select  [o] Open  ${canUseMultiBoardLayout ? '[t] Board View  ' : ''}${leaderboard.length > 0 ? '[Tab] Standings  ' : ''}[q/Esc] Back`
+            ? `[←/h] [→/l] Navigate  [Enter] Select  [o] Open  [t] List View  ${
+                leaderboard.length > 0 ? "[Tab] Standings  " : ""
+              }[q/Esc] Back`
+            : `[↑/k] Up  [↓/j] Down  [Enter] Select  [o] Open  ${
+                canUseMultiBoardLayout ? "[t] Board View  " : ""
+              }${leaderboard.length > 0 ? "[Tab] Standings  " : ""}[q/Esc] Back`
         }
       />
     </Box>
   );
 }
+
+export default memo(MultiBoardView, (prev, current) => {
+  return (
+    prev.games.length === current.games.length &&
+    prev.roundName === current.roundName &&
+    prev.tournamentName === current.tournamentName &&
+    prev.roundSlug === current.roundSlug &&
+    prev.broadcastId === current.broadcastId
+  );
+});

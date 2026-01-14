@@ -102,4 +102,6 @@ const StockfishEval = ({ fen }: StockfishEvalProps) => {
   );
 }
 
-export default memo(StockfishEval);
+export default memo(StockfishEval, (prev, next) => {
+  return prev.fen === next.fen;
+});

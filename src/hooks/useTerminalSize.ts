@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 interface TerminalSize {
   width: number;
@@ -6,10 +6,10 @@ interface TerminalSize {
 }
 
 export function useTerminalSize(debounceMs: number = 100): TerminalSize {
-  const [size, setSize] = useState<TerminalSize>({
+  const [size, setSize] = useState<TerminalSize>(() => ({
     width: process.stdout.columns || 80,
     height: process.stdout.rows || 24,
-  });
+  }));
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -19,10 +19,14 @@ export function useTerminalSize(debounceMs: number = 100): TerminalSize {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        process.stdout.write('\x1B[2J\x1B[H');
-        setSize({
-          width: process.stdout.columns || 80,
-          height: process.stdout.rows || 24,
+        const newWidth = process.stdout.columns || 80;
+        const newHeight = process.stdout.rows || 24;
+        
+        setSize(prev => {
+          if (prev.width === newWidth && prev.height === newHeight) {
+            return prev;
+          }
+          return { width: newWidth, height: newHeight };
         });
       }, debounceMs);
     };
@@ -37,5 +41,7 @@ export function useTerminalSize(debounceMs: number = 100): TerminalSize {
     };
   }, [debounceMs]);
 
-  return size;
+  // Return stable reference when values haven't changed
+  const stableSize = useMemo(() => size, [size.width, size.height]);
+  return stableSize;
 }

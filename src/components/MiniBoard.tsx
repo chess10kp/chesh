@@ -110,4 +110,6 @@ function MiniBoard({ fen, showLabels = false }: MiniBoardProps) {
   );
 }
 
-export default memo(MiniBoard);
+export default memo(MiniBoard, (prev, current) => {
+  return prev.fen === current.fen && prev.showLabels === current.showLabels;
+});

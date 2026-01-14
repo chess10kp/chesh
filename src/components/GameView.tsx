@@ -219,19 +219,20 @@ export default function GameView({
   const currentMoveIndex = analysis.state.currentMoveIndex;
 
   // Compute canGoNext and canGoPrevious based on analysis state
+  const { isAnalyzing, analysisStartIndex, analysisMoves } = analysis.state;
   const canGoNext = useMemo(() => {
-    if (analysis.state.isAnalyzing) {
-      const maxIndex = analysis.state.analysisStartIndex + analysis.state.analysisMoves.length;
+    if (isAnalyzing) {
+      const maxIndex = analysisStartIndex + analysisMoves.length;
       return currentMoveIndex < maxIndex;
     }
     return game.fenHistory ? currentMoveIndex < game.fenHistory.length - 1 : false;
-  }, [game.fenHistory, currentMoveIndex, analysis.state]);
+  }, [game.fenHistory, currentMoveIndex, isAnalyzing, analysisStartIndex, analysisMoves.length]);
 
   const canGoPrevious = currentMoveIndex > 0;
 
   // Memoize the shortcuts text to prevent HelpBar re-renders
   const boardShortcuts = useMemo(() => {
-    if (analysis.state.isAnalyzing) {
+    if (isAnalyzing) {
       return `[Arrows] Move cursor | [Enter] Select | [n/p] Nav | [f] Flip | [Esc] Exit analysis`;
     }
     return `[a] Analyze | [n/→] Next | [p/←] Prev | [f] Flip | [s] Save | [o] Open | [Tab] Sidebar | [q] Return${
@@ -241,7 +242,7 @@ export default function GameView({
         ? " (already saved)"
         : ""
     }`;
-  }, [saveStatus, analysis.state.isAnalyzing]);
+  }, [saveStatus, isAnalyzing]);
 
   const sidebarShortcuts =
     "[↑/k] Up | [↓/j] Down | [Enter] Select | [Tab] Board | [q] Return";
@@ -255,47 +256,54 @@ export default function GameView({
     undefined
   );
   const lastMove = useMemo(() => {
+    let newFrom: string | undefined;
+    let newTo: string | undefined;
+
     // In analysis mode, use analysis moves if applicable
-    if (analysis.state.isAnalyzing && currentMoveIndex > analysis.state.analysisStartIndex) {
-      const analysisIdx = currentMoveIndex - analysis.state.analysisStartIndex - 1;
-      const analysisMove = analysis.state.analysisMoves[analysisIdx];
+    if (isAnalyzing && currentMoveIndex > analysisStartIndex) {
+      const analysisIdx = currentMoveIndex - analysisStartIndex - 1;
+      const analysisMove = analysisMoves[analysisIdx];
       if (analysisMove) {
-        const from = analysisMove.uci.substring(0, 2);
-        const to = analysisMove.uci.substring(2, 4);
-        return { from, to };
+        newFrom = analysisMove.uci.substring(0, 2);
+        newTo = analysisMove.uci.substring(2, 4);
       }
     }
 
-    const currentMoveStr = game.moveHistory?.[currentMoveIndex];
-    if (!currentMoveStr) {
-      if (lastMoveRef.current === undefined) {
-        return undefined;
+    // If no analysis move, check game history
+    if (!newFrom || !newTo) {
+      const currentMoveStr = game.moveHistory?.[currentMoveIndex];
+      if (currentMoveStr) {
+        newFrom = currentMoveStr.substring(0, 2);
+        newTo = currentMoveStr.substring(2, 4);
       }
+    }
+
+    // No move to show
+    if (!newFrom || !newTo) {
       lastMoveRef.current = undefined;
       return undefined;
     }
 
-    const lastMoveFrom = currentMoveStr.substring(0, 2);
-    const lastMoveTo = currentMoveStr.substring(2, 4);
-    const newLastMove = { from: lastMoveFrom, to: lastMoveTo };
-
+    // Return cached object if values haven't changed
     if (
-      lastMoveRef.current?.from === newLastMove.from &&
-      lastMoveRef.current?.to === newLastMove.to
+      lastMoveRef.current?.from === newFrom &&
+      lastMoveRef.current?.to === newTo
     ) {
       return lastMoveRef.current;
     }
-    lastMoveRef.current = newLastMove;
-    return newLastMove;
-  }, [game.moveHistory, currentMoveIndex, analysis.state]);
+
+    // Create new object only when values actually change
+    lastMoveRef.current = { from: newFrom, to: newTo };
+    return lastMoveRef.current;
+  }, [game.moveHistory, currentMoveIndex, isAnalyzing, analysisStartIndex, analysisMoves]);
 
   // Combined moves string for display
   const displayMoves = useMemo(() => {
-    if (analysis.state.isAnalyzing && analysis.state.analysisMoves.length > 0) {
+    if (isAnalyzing && analysisMoves.length > 0) {
       return analysis.combinedMoves;
     }
     return game.moves;
-  }, [game.moves, analysis.state, analysis.combinedMoves]);
+  }, [game.moves, isAnalyzing, analysisMoves.length, analysis.combinedMoves]);
 
   const handleSave = useCallback(() => {
     addFavorite(game).then((added) => {
@@ -455,8 +463,8 @@ export default function GameView({
               lastMove={lastMove}
               flipped={flipped}
               isAnalyzing={analysis.state.isAnalyzing}
-              cursorSquare={analysis.state.cursorSquare}
-              selectedSquare={analysis.state.selectedSquare ?? undefined}
+              cursorSquare={analysis.state.isAnalyzing ? analysis.state.cursorSquare : undefined}
+              selectedSquare={analysis.state.isAnalyzing ? analysis.state.selectedSquare ?? undefined : undefined}
             />
 
             <RightPanelContainer
