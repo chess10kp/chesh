@@ -33,7 +33,7 @@
 		"chess.js": "^1.4.0",
 		"ink": "^6.6.0",
 		"react": "^19.2.3",
-		"react-devtools-core": "^7.0.1"
+		"react-devtools-core": "^6.1.2"
 	},
 	"devDependencies": {
 		"@types/bun": "^1.3.5",
