@@ -14,6 +14,9 @@ importers:
       '@mliebelt/pgn-parser':
         specifier: ^1.4.19
         version: 1.4.19
+      chesh:
+        specifier: file:chesh-0.0.4.tgz
+        version: file:chesh-0.0.4.tgz(@types/react@19.2.7)
       chess.js:
         specifier: ^1.4.0
         version: 1.4.0
@@ -48,6 +51,9 @@ packages:
 
   '@lichess-org/types@2.0.110':
     resolution: {integrity: sha512-FUcnfHR0vur6VOg8FP4Tnxb8PU3ZjO2qSx+Tn2C+eoqATTg9sMCAv5EUcjuYI6syj1QjkyuT2auzg1TdcrxHyA==}
+
+  '@lichess-org/types@2.0.112':
+    resolution: {integrity: sha512-ZxttgR+LETnJlFzewHBFd3SuLBwsb/e7fZXMxP0F39JSJ3wrmNOd2NVCf1n3DFHlBqb7ZOAaaG/JScy3qJT+8Q==}
 
   '@mliebelt/pgn-parser@1.4.19':
     resolution: {integrity: sha512-UWujpNxBjX8ONd1Wn1Pw9mexvWhzvpFWpekmlW2peMd0J+NzqK5FmRGBQLGA6meqPRW+VNvXfJhf+zHvxfS7ZA==}
@@ -87,6 +93,12 @@ packages:
   chalk@5.6.2:
     resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
+
+  chesh@file:chesh-0.0.4.tgz:
+    resolution: {integrity: sha512-6rGzexXY//ZTVhI+sd/ev+qm8UvEjpFG1qp8aFteJuOMFZF6EZC660jRi0bxLovth5Yv6jHKyDMM/g029P0D5A==, tarball: file:chesh-0.0.4.tgz}
+    version: 0.0.4
+    engines: {node: '>=18.0.0'}
+    hasBin: true
 
   chess.js@1.4.0:
     resolution: {integrity: sha512-BBJgrrtKQOzFLonR0l+k64A98NLemPwNsCskwb+29bRwobUa4iTm51E1kwGPbWXAcfdDa18nad6vpPPKPWarqw==}
@@ -273,6 +285,8 @@ snapshots:
 
   '@lichess-org/types@2.0.110': {}
 
+  '@lichess-org/types@2.0.112': {}
+
   '@mliebelt/pgn-parser@1.4.19':
     dependencies:
       '@mliebelt/pgn-types': 1.0.4
@@ -306,6 +320,19 @@ snapshots:
       '@types/node': 25.0.8
 
   chalk@5.6.2: {}
+
+  chesh@file:chesh-0.0.4.tgz(@types/react@19.2.7):
+    dependencies:
+      '@lichess-org/types': 2.0.112
+      '@mliebelt/pgn-parser': 1.4.19
+      chess.js: 1.4.0
+      ink: 6.6.0(@types/react@19.2.7)(react-devtools-core@6.1.5)(react@19.2.3)
+      react: 19.2.3
+      react-devtools-core: 6.1.5
+    transitivePeerDependencies:
+      - '@types/react'
+      - bufferutil
+      - utf-8-validate
 
   chess.js@1.4.0: {}
 
