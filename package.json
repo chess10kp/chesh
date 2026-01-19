@@ -1,6 +1,6 @@
 {
 	"name": "chesh",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"description": "TUI for viewing live chess games from Lichess broadcasts",
 	"license": "MIT",
 	"bin": {
