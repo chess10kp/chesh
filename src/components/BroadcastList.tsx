@@ -77,7 +77,7 @@ export default function BroadcastList({ onSelectBroadcast, onSelectSavedGames, s
   if (error) {
     return (
       <Box justifyContent="center" padding={2}>
-        <Text color="red">❌ Error: {error}</Text>
+        <Text color="red">Error: {error}</Text>
       </Box>
     );
   }
@@ -99,7 +99,7 @@ export default function BroadcastList({ onSelectBroadcast, onSelectSavedGames, s
           >
             <Text>
               {selectedIndex === 0 ? '▶ ' : '  '}
-              <Text color="magenta" bold>★ Saved Games</Text>
+              <Text color="magenta" bold>Saved Games</Text>
             </Text>
           </Box>
           {broadcasts.map((broadcast, index) => {

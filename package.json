@@ -4,19 +4,28 @@
 	"description": "TUI for viewing live chess games from Lichess broadcasts",
 	"license": "MIT",
 	"bin": {
-		"chesh": "dist/index.js"
+		"chesh": "bin/chesh"
 	},
 	"type": "module",
+	"exports": {
+		".": {
+			"import": "./dist/index.js"
+		}
+	},
 	"engines": {
-		"bun": ">=1.0.0"
+		"node": ">=18.0.0"
 	},
 	"scripts": {
-		"dev": "bun run src/index.tsx",
-		"build": "bun build ./src/index.tsx --outdir ./dist --target bun",
-		"type-check": "tsc --noEmit"
+		"dev": "node --loader tsx src/index.tsx",
+		"build": "bun build ./src/index.tsx --outdir ./dist --target node",
+		"type-check": "tsc --noEmit",
+		"prepublishOnly": "npm run build && npm run type-check"
 	},
 	"files": [
-		"dist"
+		"dist",
+		"bin",
+		"README.md",
+		"LICENSE"
 	],
 	"dependencies": {
 		"@lichess-org/types": "latest",
