@@ -104,7 +104,7 @@ function parseSingleGame(parsedGame: { tags: any; moves: any[] }, index: number)
     pgn: pgnText,
     fenHistory,
     moveHistory,
-    currentMoveIndex: fenHistory.length - 1,
+    currentMoveIndex: 0,
     moves: moveNotations,
   };
 }

@@ -8,7 +8,7 @@ interface UseStockfishOptions {
 }
 
 export function useStockfish(fen: string | undefined, options: UseStockfishOptions = {}) {
-  const { depth = 20, multiPv = 3 } = options;
+  const { depth = 20, multiPv = 1 } = options;
 
   const [state, setState] = useState<StockfishState>({
     evaluation: null,
@@ -42,6 +42,12 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
 
   const parseInfoLine = useCallback((line: string): Partial<StockfishEvaluation> | null => {
     if (!line.startsWith('info') || !line.includes('score')) {
+      return null;
+    }
+
+    // Only use the best line (multipv 1) when MultiPV is enabled
+    const multiPvMatch = line.match(/multipv (\d+)/);
+    if (multiPvMatch && multiPvMatch[1] !== '1') {
       return null;
     }
 
