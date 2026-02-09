@@ -88,7 +88,7 @@ function MiniBoard({ fen, showLabels = false }: MiniBoardProps) {
                 : defaultTheme.pieceBlack;
 
               return (
-                <Box key={square.position} width={3} backgroundColor={bgColor}>
+                <Box key={square.position} width={3} height={1} backgroundColor={bgColor}>
                   <Text color={pieceColor}>{content}</Text>
                 </Box>
               );

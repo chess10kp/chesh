@@ -32,6 +32,7 @@ export default function App() {
   const [roundName, setRoundName] = useState<string>('');
   const [roundSlug, setRoundSlug] = useState<string>('');
   const [roundId, setRoundId] = useState<string>('');
+  const [noGamesFound, setNoGamesFound] = useState(false);
 
   const handleBackToList = useCallback(() => {
     setSelectedGame(null);
@@ -84,6 +85,7 @@ export default function App() {
 
   const handleSelectRound = async (round: BroadcastRound) => {
     setLoadingGames(true);
+    setNoGamesFound(false);
     setRoundName(round.name);
     setRoundSlug(round.slug || round.name);
     setRoundId(round.id);
@@ -121,6 +123,7 @@ export default function App() {
 
       if (fullPgn.length === 0) {
         setGames([]);
+        setNoGamesFound(true);
         setLoadingGames(false);
         return;
       }
@@ -129,12 +132,15 @@ export default function App() {
 
       if (parsedGames.length > 0) {
         setGames(parsedGames);
+        setNoGamesFound(false);
         setViewState('games-list');
       } else {
         setGames([]);
+        setNoGamesFound(true);
       }
     } catch (err: any) {
       setGames([]);
+      setNoGamesFound(true);
     } finally {
       setLoadingGames(false);
     }
@@ -142,7 +148,7 @@ export default function App() {
 
   return (
     <Box flexDirection="column">
-      <Header loading={loading} loadingGames={loadingGames} loadingRounds={loadingRounds} />
+      <Header loading={loading} loadingGames={loadingGames} loadingRounds={loadingRounds} noGamesFound={noGamesFound} />
 
       {viewState === 'broadcast-list' ? (
         <BroadcastList

@@ -1,6 +1,6 @@
 {
 	"name": "chesh",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"description": "TUI for viewing live chess games from Lichess broadcasts",
 	"license": "MIT",
 	"bin": {
@@ -16,7 +16,7 @@
 		"node": ">=18.0.0"
 	},
 	"scripts": {
-		"dev": "node --loader tsx src/index.tsx",
+		"dev": "bun run src/index.tsx",
 		"build": "bun build ./src/index.tsx --outdir ./dist --target node",
 		"type-check": "tsc --noEmit",
 		"prepublishOnly": "npm run build && npm run type-check"

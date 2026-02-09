@@ -37,7 +37,7 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
       if (debouncedEvaluationRef.current) {
         setState(prev => ({ ...prev, evaluation: debouncedEvaluationRef.current! }));
       }
-    }, 300);
+    }, 100);
   }, []);
 
   const parseInfoLine = useCallback((line: string): Partial<StockfishEvaluation> | null => {
@@ -93,7 +93,6 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
     }
 
     const proc = processRef.current;
-    proc.stdin?.write('stop\n');
     proc.stdin?.write(`position fen ${fenToAnalyze}\n`);
     proc.stdin?.write(`setoption name MultiPV value ${multiPv}\n`);
     proc.stdin?.write(`go depth ${depth}\n`);
@@ -153,15 +152,16 @@ export function useStockfish(fen: string | undefined, options: UseStockfishOptio
               timeoutRef.current = null;
             }
             const moveMatch = line.match(/bestmove (\S+)/);
-            if (moveMatch && moveMatch[1]) {
-              const bestMove = moveMatch[1];
-              setState(prev => ({
+            const bestMove = moveMatch && moveMatch[1] ? moveMatch[1] : '';
+            setState(prev => {
+              const currentEval = prev.evaluation;
+              return {
                 ...prev,
-                evaluation: prev.evaluation
-                  ? { ...prev.evaluation, bestMove, isAnalyzing: false }
-                  : null,
-              }));
-            }
+                evaluation: currentEval
+                  ? { ...currentEval, bestMove, isAnalyzing: false }
+                  : { score: 0, isMate: false, depth: 0, bestMove, pv: [], isAnalyzing: false },
+              };
+            });
           }
         }
       });
